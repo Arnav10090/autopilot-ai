@@ -42,97 +42,139 @@ export default function ProjectForm() {
       setLoading(true);
       setStep(0);
 
-      // Simulated agent progression for UX clarity
       setStep(1);
       const result = await analyzeProject(form);
-      console.debug("analyzeProject result:", result);
 
       setStep(4);
       if (result && result.project_id) {
         router.push(`/project/${result.project_id}`);
       } else {
-        console.error("analyzeProject returned no project_id:", result);
         setError("Failed to create project. No project id returned.");
       }
     } catch (err) {
-        console.error("analyzeProject error:", err);
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message || "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
       {loading && <AgentProgress currentStep={step} />}
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow space-y-4"
-      >
-        <h1 className="text-2xl font-semibold text-gray-800">
+      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Create Project Plan
         </h1>
+        <p className="text-gray-600 mb-8">
+          Provide details about your project and let our AI agents create a comprehensive plan.
+        </p>
 
-        <textarea
-          name="project_description"
-          placeholder="Describe your project idea..."
-          value={form.project_description}
-          onChange={handleChange}
-          className="w-full border rounded p-3 min-h-[120px]"
-        />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Project Description */}
+          <div>
+            <label htmlFor="project_description" className="block text-sm font-medium text-gray-700 mb-2">
+              Project Description *
+            </label>
+            <textarea
+              id="project_description"
+              name="project_description"
+              placeholder="Describe your project idea, goals, and key features..."
+              value={form.project_description}
+              onChange={handleChange}
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg p-4 min-h-[160px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            />
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="number"
-            name="team_size"
-            min={1}
-            value={form.team_size}
-            onChange={handleChange}
-            className="border rounded p-2"
-            placeholder="Team Size"
-          />
+          {/* Team Size & Deadline Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="team_size" className="block text-sm font-medium text-gray-700 mb-2">
+                Team Size *
+              </label>
+              <input
+                type="number"
+                id="team_size"
+                name="team_size"
+                min={1}
+                value={form.team_size}
+                onChange={handleChange}
+                disabled={loading}
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
 
-          <input
-            type="text"
-            name="deadline"
-            value={form.deadline}
-            onChange={handleChange}
-            className="border rounded p-2"
-            placeholder="Deadline (e.g. 6 weeks)"
-          />
-        </div>
+            <div>
+              <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-2">
+                Deadline *
+              </label>
+              <input
+                type="text"
+                id="deadline"
+                name="deadline"
+                value={form.deadline}
+                onChange={handleChange}
+                disabled={loading}
+                placeholder="e.g., 6 weeks, 3 months"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+          </div>
 
-        <select
-          name="skill_level"
-          value={form.skill_level}
-          onChange={handleChange}
-          className="border rounded p-2 w-full"
-        >
-          <option>Beginner</option>
-          <option>Intermediate</option>
-          <option>Advanced</option>
-        </select>
+          {/* Skill Level */}
+          <div>
+            <label htmlFor="skill_level" className="block text-sm font-medium text-gray-700 mb-2">
+              Team Skill Level *
+            </label>
+            <select
+              id="skill_level"
+              name="skill_level"
+              value={form.skill_level}
+              onChange={handleChange}
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+          </div>
 
-        <textarea
-          name="constraints"
-          placeholder="Any constraints? (optional)"
-          value={form.constraints}
-          onChange={handleChange}
-          className="w-full border rounded p-3"
-        />
+          {/* Constraints */}
+          <div>
+            <label htmlFor="constraints" className="block text-sm font-medium text-gray-700 mb-2">
+              Constraints (Optional)
+            </label>
+            <textarea
+              id="constraints"
+              name="constraints"
+              placeholder="Any technical constraints, budget limitations, or specific requirements..."
+              value={form.constraints}
+              onChange={handleChange}
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg p-4 min-h-[100px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            />
+          </div>
 
-        {error && <p className="text-red-600">{error}</p>}
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Generating Plan..." : "Generate Plan"}
-        </button>
-      </form>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
+          >
+            {loading ? "Generating Plan..." : "Generate Plan"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

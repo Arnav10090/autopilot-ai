@@ -15,8 +15,6 @@ export default async function ProjectDashboard({ params }: Props) {
   const id = resolvedParams?.id;
 
   if (!id || id === "undefined") {
-    // If the route was navigated to with an invalid id (e.g. '/project/undefined'),
-    // redirect the user back to the create page instead of throwing a server error.
     redirect("/create");
   }
 
@@ -24,24 +22,37 @@ export default async function ProjectDashboard({ params }: Props) {
   const metrics = await getMetrics();
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">
-        Project Plan Dashboard
-      </h1>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-md p-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Project Plan Dashboard
+          </h1>
+          <p className="text-gray-600">
+            AI-generated project analysis and recommendations
+          </p>
+        </div>
 
-      <RequirementsView requirements={project.requirements} />
+        {/* Requirements */}
+        <RequirementsView requirements={project.requirements} />
 
-      {project.tech_stack && (
-        <TechStackView techStack={project.tech_stack} />
-      )}
+        {/* Tech Stack */}
+        {project.tech_stack && (
+          <TechStackView techStack={project.tech_stack} />
+        )}
 
-      {project.task_plan && (
-        <TaskPlanView taskPlan={project.task_plan} />
-      )}
+        {/* Task Plan */}
+        {project.task_plan && (
+          <TaskPlanView taskPlan={project.task_plan} />
+        )}
 
-      {project.risks && <RiskView risks={project.risks} />}
+        {/* Risks */}
+        {project.risks && <RiskView risks={project.risks} />}
 
-      <MetricsDashboard metrics={metrics} />
+        {/* Metrics */}
+        <MetricsDashboard metrics={metrics} />
+      </div>
     </div>
   );
 }
