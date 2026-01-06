@@ -1,0 +1,51 @@
+import { CreateProjectPayload } from "@/types/project";
+
+export async function analyzeProject(data: CreateProjectPayload) {
+  const res = await fetch("http://localhost:5000/api/projects/analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) {
+    let errMsg = `Failed to analyze project: ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body && body.message) errMsg = `Failed to analyze project: ${body.message}`;
+    } catch (e) {
+      // ignore json parse errors
+    }
+    throw new Error(errMsg);
+  }
+
+  return res.json();
+}
+
+export async function getProjectById(id: string) {
+  if (!id || id === "undefined") {
+    throw new Error("Invalid project id provided to getProjectById");
+  }
+  const res = await fetch(`http://localhost:5000/api/projects/${id}`, {
+    cache: "no-store"
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch project");
+  }
+
+  return res.json();
+}
+
+export async function getMetrics() {
+  const res = await fetch("http://localhost:5000/api/metrics", {
+    cache: "no-store"
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch metrics");
+  }
+
+  return res.json();
+}
