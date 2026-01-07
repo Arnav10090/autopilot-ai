@@ -6,14 +6,9 @@ import { runRiskAssessmentAgent } from "./riskAssessmentAgent.js";
 export async function runFullAnalysis(input) {
   const requirements = await runRequirementAgent(input);
 
-  // If info is missing, stop early
-  if (requirements.missing_information.length > 0) {
-    return {
-      status: "incomplete",
-      requirements
-    };
-  }
-
+  // Always continue running the other agents even if requirements report missing information.
+  // The final status will reflect whether there was missing information, but we still produce
+  // tech stack, task plan, and risk outputs to give the user as much value as possible.
   const techStack = await runTechStackAgent(requirements, input);
 
   const taskPlan = await runTaskPlannerAgent(
@@ -28,8 +23,10 @@ export async function runFullAnalysis(input) {
     taskPlan
   );
 
+  const status = (requirements?.missing_information && requirements.missing_information.length > 0) ? "incomplete" : "completed";
+
   return {
-    status: "completed",
+    status,
     requirements,
     tech_stack: techStack,
     task_plan: taskPlan,
