@@ -52,7 +52,15 @@ export function RequirementsSection({
           />
           <CardBody className="space-y-3">
             {functional.length > 0 ? (
-              functional.map((req) => <RequirementCard key={req.id} requirement={req} />)
+              functional.map((req) => (
+                <RequirementsCard
+                  key={req.id}
+                  text={req.text}
+                  onCopy={() => handleCopy(req.text)}
+                  onEdit={() => handleEdit(req.id)}
+                  onComment={() => onComment?.(req.id)}
+                />
+              ))
             ) : (
               <p className="text-sm text-neutral-600 dark:text-neutral-400 py-6 text-center">
                 No functional requirements found. Try regenerating with more detail.
@@ -69,7 +77,15 @@ export function RequirementsSection({
           />
           <CardBody className="space-y-3">
             {nonFunctional.length > 0 ? (
-              nonFunctional.map((req) => <RequirementCard key={req.id} requirement={req} />)
+              nonFunctional.map((req) => (
+                <RequirementsCard
+                  key={req.id}
+                  text={req.text}
+                  onCopy={() => handleCopy(req.text)}
+                  onEdit={() => handleEdit(req.id)}
+                  onComment={() => onComment?.(req.id)}
+                />
+              ))
             ) : (
               <p className="text-sm text-neutral-600 dark:text-neutral-400 py-6 text-center">
                 No non-functional requirements found.
@@ -83,7 +99,15 @@ export function RequirementsSection({
           <CardHeader title="Assumptions" action={<Badge variant="info">{assumptions.length}</Badge>} />
           <CardBody className="space-y-3">
             {assumptions.length > 0 ? (
-              assumptions.map((req) => <RequirementCard key={req.id} requirement={req} />)
+              assumptions.map((req) => (
+                <RequirementsCard
+                  key={req.id}
+                  text={req.text}
+                  onCopy={() => handleCopy(req.text)}
+                  onEdit={() => handleEdit(req.id)}
+                  onComment={() => onComment?.(req.id)}
+                />
+              ))
             ) : (
               <p className="text-sm text-neutral-600 dark:text-neutral-400 py-6 text-center">
                 No assumptions identified.
@@ -100,7 +124,15 @@ export function RequirementsSection({
               action={<Badge variant="danger">{missing.length}</Badge>}
             />
             <CardBody className="space-y-3">
-              {missing.map((req) => <RequirementCard key={req.id} requirement={req} />)}
+              {missing.map((req) => (
+                <RequirementsCard
+                  key={req.id}
+                  text={req.text}
+                  onCopy={() => handleCopy(req.text)}
+                  onEdit={() => handleEdit(req.id)}
+                  onComment={() => onComment?.(req.id)}
+                />
+              ))}
               <p className="text-xs text-warning mt-4 pt-3 border-t border-warning/30">
                 💡 Provide more details to improve recommendations
               </p>
