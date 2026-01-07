@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { ThreeDAccent } from '@/components/ThreeDAccent';
 
 interface ProjectHeroProps {
   title: string;
@@ -34,8 +35,13 @@ export function ProjectHero({
   });
 
   return (
-    <div className="bg-gradient-to-br from-accent/10 via-transparent to-accent-2/10 rounded-xl border border-accent/30 p-8 mb-8">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+    <div className="bg-gradient-to-br from-accent/10 via-transparent to-accent-2/10 rounded-xl border border-accent/30 p-8 mb-8 overflow-hidden relative">
+      {/* 3D Accent background - positioned absolutely on the right */}
+      <div className="hidden lg:block absolute -right-32 -top-20 w-96 h-96 opacity-40 pointer-events-none">
+        <ThreeDAccent variant="blob" animated interactive={false} />
+      </div>
+
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 relative z-10">
         {/* Left content */}
         <div className="flex-1 space-y-4">
           <div className="flex items-start gap-4">
@@ -57,7 +63,7 @@ export function ProjectHero({
         </div>
 
         {/* Right actions */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Tooltip content="Regenerate analysis">
             <Button
               variant="outline"
