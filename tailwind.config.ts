@@ -159,6 +159,9 @@ const config: Config = {
           '50%': { transform: 'translateY(-8px)' },
         },
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
   plugins: [],
