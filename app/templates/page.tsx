@@ -83,12 +83,13 @@ export default function TemplatesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {TEMPLATES.map((template, i) => (
-          <Card key={template.id} isHoverable className="animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
-            <CardBody className="space-y-4">
+          <Card key={template.id} isHoverable className="animate-slide-up group overflow-hidden relative" style={{ animationDelay: `${i * 0.05}s` }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            <CardBody className="space-y-4 relative z-10">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
-                  <div className="text-4xl">{template.icon}</div>
-                  <h3 className="font-display font-700 text-lg text-neutral-900 dark:text-neutral-50">
+                  <div className="text-4xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">{template.icon}</div>
+                  <h3 className="font-display font-700 text-lg text-neutral-900 dark:text-neutral-50 group-hover:text-accent transition-colors duration-300">
                     {template.name}
                   </h3>
                 </div>
