@@ -128,6 +128,12 @@ const config: Config = {
         'shimmer': 'shimmer 2s infinite',
         'rotate-slow': 'rotate-slow 12s linear infinite',
         'bob': 'bob 3s var(--easing-in-out) infinite',
+        'scale-in': 'scale-in var(--duration-300) var(--easing-out) forwards',
+        'slide-in-right': 'slide-in-right var(--duration-300) var(--easing-out) forwards',
+        'slide-in-left': 'slide-in-left var(--duration-300) var(--easing-out) forwards',
+        'glow-pulse': 'glow-pulse var(--duration-2000) var(--easing-in-out) infinite',
+        'float': 'float 3s var(--easing-in-out) infinite',
+        'bounce-in': 'bounce-in var(--duration-500) var(--easing-bounce) forwards',
       },
       keyframes: {
         'fade-in': {
