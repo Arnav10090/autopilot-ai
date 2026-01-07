@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { ThreeDAccent } from '@/components/ThreeDAccent';
 
 interface ProjectHeroProps {
   title: string;
