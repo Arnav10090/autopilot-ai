@@ -195,6 +195,47 @@ export default function ProjectDetailPage() {
       {/* Risk Analysis */}
       <RiskSection {...riskProps} />
 
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        projectTitle={project.title || 'Project Analysis'}
+        onExport={async (format, options) => {
+          try {
+            const exportData = {
+              title: project.title || 'Project Analysis',
+              id: project.id,
+              status: project.status || 'completed',
+              createdAt: project.created_at,
+              requirements: options.includeRequirements ? {
+                functional: project.requirements?.functional_requirements || [],
+                nonFunctional: project.requirements?.non_functional_requirements || [],
+                assumptions: project.requirements?.assumptions || [],
+                missing: project.requirements?.missing_information || [],
+              } : undefined,
+              techStack: options.includeTechStack ? Object.entries(project.tech_stack || {}).map(([category, data]: any) => ({
+                category,
+                choice: data?.choice || '',
+                reason: data?.reason || '',
+                confidence: 4.2,
+              })) : undefined,
+              risks: options.includeRisks ? (project.risks?.risks || []) : undefined,
+              metrics: options.includeMetrics ? [
+                {
+                  label: 'Total Tasks',
+                  value: project.task_plan?.modules?.reduce((sum: number, m: any) => sum + (m.tasks?.length || 0), 0) || 0,
+                },
+              ] : undefined,
+              notes: options.includeNotes ? 'Project notes and analysis details' : undefined,
+            };
+
+            await exportProject(exportData, format, options);
+          } catch (err: any) {
+            throw new Error(err.message || 'Failed to export project');
+          }
+        }}
+      />
+
       {/* Regenerate Modal */}
       <Modal
         isOpen={showRegenerateModal}
