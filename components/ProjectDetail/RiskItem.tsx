@@ -39,6 +39,12 @@ export function RiskItem({
     >
       <button
         onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
         className="w-full text-left p-5 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
         aria-expanded={isExpanded}
       >
