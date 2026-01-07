@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -21,11 +21,93 @@ export function Modal({
   size = 'md',
   closeButton = true,
 }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Get all focusable elements within the modal
+  const getFocusableElements = () => {
+    if (!modalRef.current) return [];
+    return Array.from(
+      modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ) as HTMLElement[];
+  };
+
+  // Handle tab key and focus trapping
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== 'Tab') return;
+
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement as HTMLElement;
+
+    if (e.shiftKey) {
+      if (activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+    } else {
+      if (activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  };
+
+  // Handle Escape key
+  const handleKeyUp = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
+      // Store the currently focused element
+      previousActiveElement.current = document.activeElement as HTMLElement;
       document.body.style.overflow = 'hidden';
+
+      // Add aria-hidden to main content
+      const main = document.querySelector('main');
+      if (main) {
+        main.setAttribute('aria-hidden', 'true');
+      }
+
+      // Focus first focusable element in modal
+      setTimeout(() => {
+        const focusableElements = getFocusableElements();
+        if (focusableElements.length > 0) {
+          focusableElements[0].focus();
+        }
+      }, 0);
+
+      // Add event listeners
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keyup', handleKeyUp);
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('keyup', handleKeyUp);
+      };
     } else {
       document.body.style.overflow = 'unset';
+
+      // Remove aria-hidden from main content
+      const main = document.querySelector('main');
+      if (main) {
+        main.removeAttribute('aria-hidden');
+      }
+
+      // Restore focus to the previously focused element
+      if (previousActiveElement.current && previousActiveElement.current.focus) {
+        setTimeout(() => {
+          previousActiveElement.current?.focus();
+        }, 0);
+      }
     }
 
     return () => {
