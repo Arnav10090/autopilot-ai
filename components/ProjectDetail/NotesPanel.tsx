@@ -180,7 +180,13 @@ export function NotesPanel({
                     {isLong && (
                       <button
                         onClick={() => toggleExpanded(note.id)}
-                        className="text-xs text-accent hover:text-accent/80 font-medium mt-2"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleExpanded(note.id);
+                          }
+                        }}
+                        className="text-xs text-accent hover:text-accent/80 font-medium mt-2 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent rounded"
                       >
                         {isExpanded ? 'Show less' : 'Show more'}
                       </button>
