@@ -80,25 +80,26 @@ export default function AnalyticsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {kpis.map((kpi, i) => (
-          <Card key={i} isHoverable className="animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
-            <CardBody className="space-y-4">
+          <Card key={i} isHoverable className="animate-slide-up group overflow-hidden relative" style={{ animationDelay: `${i * 0.05}s` }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            <CardBody className="space-y-4 relative z-10">
               <div className="flex items-start justify-between">
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">{kpi.label}</p>
-                <span className="text-2xl">{kpi.icon}</span>
+                <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{kpi.icon}</span>
               </div>
 
               <div className="space-y-2">
-                <p className="text-3xl font-display font-700 text-neutral-900 dark:text-neutral-50">
+                <p className="text-3xl font-display font-700 text-neutral-900 dark:text-neutral-50 group-hover:text-accent transition-colors duration-300">
                   {kpi.value}
                 </p>
-                <p className={`text-sm font-medium ${kpi.change > 0 ? 'text-success' : 'text-danger'}`}>
+                <p className={`text-sm font-medium transition-all duration-300 ${kpi.change > 0 ? 'text-success' : 'text-danger'}`}>
                   {kpi.change > 0 ? '↑' : '↓'} {Math.abs(kpi.change)}% from last period
                 </p>
               </div>
 
               <div className="h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-accent to-accent-2"
+                  className="h-full bg-gradient-to-r from-accent to-accent-2 transition-all duration-700 ease-out"
                   style={{ width: `${75 + Math.random() * 25}%` }}
                 />
               </div>
