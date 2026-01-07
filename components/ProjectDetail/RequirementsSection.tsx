@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { RequirementsCard } from '@/components/ProjectDetail/RequirementsCard';
 
 interface Requirement {
   id: string;
@@ -15,6 +16,7 @@ interface RequirementsSectionProps {
   nonFunctional: Requirement[];
   assumptions: Requirement[];
   missing: Requirement[];
+  onComment?: (requirementId: string) => void;
 }
 
 export function RequirementsSection({
@@ -22,32 +24,16 @@ export function RequirementsSection({
   nonFunctional,
   assumptions,
   missing,
+  onComment,
 }: RequirementsSectionProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
 
-  const RequirementCard = ({ requirement }: { requirement: Requirement }) => (
-    <div className="border-l-4 border-accent pl-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded transition-colors">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm text-neutral-700 dark:text-neutral-300 flex-1">
-          {requirement.text}
-        </p>
-        <div className="flex gap-2 flex-shrink-0">
-          <button
-            aria-label="Copy"
-            className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
-          >
-            📋
-          </button>
-          <button
-            aria-label="Edit"
-            className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
-          >
-            ✏️
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  const handleEdit = (id: string) => {
+    // TODO: Implement edit functionality
+    console.log('Edit requirement:', id);
+  };
 
   return (
     <div className="space-y-6 mb-8">
