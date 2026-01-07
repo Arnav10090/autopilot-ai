@@ -170,13 +170,13 @@ export default function ProjectDetailPage() {
         status={project.status || 'completed'}
         createdAt={project.created_at}
         onRegenerateClick={() => setShowRegenerateModal(true)}
-        onExportClick={() => {
-          // TODO: Implement export
-          console.log('Export clicked');
-        }}
+        onExportClick={() => setShowExportModal(true)}
         onShareClick={() => {
-          // TODO: Implement share
-          console.log('Share clicked');
+          // TODO: Implement share functionality
+          const projectUrl = `${window.location.origin}/project/${project.id}`;
+          navigator.clipboard.writeText(projectUrl).then(() => {
+            alert('Project link copied to clipboard!');
+          });
         }}
       />
 
