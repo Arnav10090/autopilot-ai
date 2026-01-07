@@ -1,17 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-// @ts-ignore: Cannot find module or type declarations for side-effect import of './globals.css'.
+import { Header } from "@/components/global/Header";
+import { SideNav } from "@/components/global/SideNav";
+import { Footer } from "@/components/global/Footer";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "AutoPilot AI - Project Planning Tool",
@@ -25,10 +16,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
-      >
-        {children}
+      <body className="antialiased bg-bg dark:bg-bg-dark text-neutral-900 dark:text-neutral-50">
+        <Header />
+        <div className="flex min-h-screen">
+          <SideNav />
+          <main className="flex-1 lg:ml-0">
+            {children}
+          </main>
+        </div>
+        <Footer />
       </body>
     </html>
   );

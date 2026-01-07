@@ -1,73 +1,57 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { ProjectHero } from '@/components/ProjectDetail/ProjectHero';
+import { RequirementsSection } from '@/components/ProjectDetail/RequirementsSection';
+import { TechStackSection } from '@/components/ProjectDetail/TechStackSection';
+import { ExecutionPlanSection } from '@/components/ProjectDetail/ExecutionPlanSection';
+import { RiskSection } from '@/components/ProjectDetail/RiskSection';
+import { MetricsSection } from '@/components/ProjectDetail/MetricsSection';
+import { Card, CardBody } from '@/components/ui/Card';
+import { Spinner } from '@/components/ui/Spinner';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 
-export default function CompleteDashboard() {
+export default function ProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<any>(null);
-  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchProject() {
       try {
         setLoading(true);
+        const response = await fetch(`http://127.0.0.1:5000/api/projects/${projectId}`);
 
-        const [projectRes, metricsRes] = await Promise.all([
-          fetch(`http://127.0.0.1:5000/api/projects/${projectId}`),
-          fetch(`http://127.0.0.1:5000/api/metrics`)
-        ]);
-
-        if (!projectRes.ok) {
-          throw new Error("Failed to fetch project");
+        if (!response.ok) {
+          throw new Error('Failed to fetch project');
         }
 
-        if (!metricsRes.ok) {
-          throw new Error("Failed to fetch metrics");
-        }
-
-        const projectData = await projectRes.json();
-        const metricsData = await metricsRes.json();
-
-        setProject(projectData);
-        setMetrics(metricsData);
+        const data = await response.json();
+        setProject(data);
       } catch (err: any) {
-        console.error(err);
-        setError(err.message || "Something went wrong");
+        setError(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
       }
     }
 
     if (projectId) {
-      fetchData();
+      fetchProject();
     }
   }, [projectId]);
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleString();
-
-  const getStatusBadge = (status: string) =>
-    status === "completed" ? (
-      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-        Completed
-      </span>
-    ) : (
-      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-        Incomplete
-      </span>
-    );
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin h-10 w-10 border-b-2 border-blue-600 rounded-full mx-auto" />
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Spinner size="lg" />
+          <p className="text-neutral-600 dark:text-neutral-400">Loading project...</p>
         </div>
       </div>
     );
@@ -75,155 +59,171 @@ export default function CompleteDashboard() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-red-600">{error || "Project not found"}</p>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardBody className="text-center space-y-4">
+            <p className="text-lg font-medium text-danger">Error Loading Project</p>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              {error || 'Project not found'}
+            </p>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              Go Back
+            </Button>
+          </CardBody>
+        </Card>
       </div>
     );
   }
 
-  const severityConfig: any = {
-    Low: { bg: "bg-green-50", badge: "bg-green-100 text-green-800" },
-    Medium: { bg: "bg-yellow-50", badge: "bg-yellow-100 text-yellow-800" },
-    High: { bg: "bg-red-50", badge: "bg-red-100 text-red-800" }
+  // Transform API data to match component expectations
+  const requirementsSectionProps = {
+    functional: project.requirements?.functional_requirements?.map((text: string, i: number) => ({
+      id: `f-${i}`,
+      text,
+    })) || [],
+    nonFunctional: project.requirements?.non_functional_requirements?.map((text: string, i: number) => ({
+      id: `nf-${i}`,
+      text,
+    })) || [],
+    assumptions: project.requirements?.assumptions?.map((text: string, i: number) => ({
+      id: `a-${i}`,
+      text,
+    })) || [],
+    missing: project.requirements?.missing_information?.map((text: string, i: number) => ({
+      id: `m-${i}`,
+      text,
+    })) || [],
+  };
+
+  const techStackProps = {
+    recommendations: Object.entries(project.tech_stack || {}).map(([category, data]: any, i) => ({
+      id: `tech-${i}`,
+      category,
+      choice: data?.choice || '',
+      reason: data?.reason || '',
+      confidence: 4.2,
+      icon: '🔧',
+    })),
+  };
+
+  const executionPlanProps = {
+    modules: project.task_plan?.modules?.map((module: any, i: number) => ({
+      id: `module-${i}`,
+      name: module.module_name,
+      estimateDays: module.tasks?.reduce((sum: number, t: any) => sum + (t.estimate_days || 0), 0) || 0,
+      tasks: module.tasks?.map((task: any, j: number) => ({
+        id: `task-${i}-${j}`,
+        name: task.task_name,
+        estimateDays: task.estimate_days || 0,
+        dependencies: [],
+        progress: 0,
+      })) || [],
+    })) || [],
+  };
+
+  const riskProps = {
+    risks: project.risks?.risks?.map((risk: any, i: number) => ({
+      id: `risk-${i}`,
+      risk: risk.risk,
+      severity: risk.severity,
+      mitigation: risk.mitigation,
+      impact: risk.description || 'Medium impact',
+    })) || [],
+  };
+
+  const metricsProps = {
+    metrics: [
+      {
+        label: 'Estimated Duration',
+        value: project.task_plan?.modules?.reduce((sum: number, m: any) =>
+          sum + m.tasks?.reduce((s: number, t: any) => s + (t.estimate_days || 0), 0), 0) || 0,
+        unit: 'days',
+        color: 'accent' as const,
+      },
+      {
+        label: 'Total Tasks',
+        value: project.task_plan?.modules?.reduce((sum: number, m: any) => sum + (m.tasks?.length || 0), 0) || 0,
+        color: 'info' as const,
+      },
+      {
+        label: 'Risk Count',
+        value: project.risks?.risks?.length || 0,
+        color: 'warning' as const,
+      },
+      {
+        label: 'Tech Stack Items',
+        value: Object.keys(project.tech_stack || {}).length,
+        color: 'success' as const,
+      },
+    ],
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <main className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
+      {/* Hero Section */}
+      <ProjectHero
+        title={project.title || 'Project Analysis'}
+        id={project.id}
+        status={project.status || 'completed'}
+        createdAt={project.created_at}
+        onRegenerateClick={() => setShowRegenerateModal(true)}
+        onExportClick={() => {
+          // TODO: Implement export
+          console.log('Export clicked');
+        }}
+        onShareClick={() => {
+          // TODO: Implement share
+          console.log('Share clicked');
+        }}
+      />
 
-        {/* PROJECT OVERVIEW */}
-        <section className="bg-white p-8 rounded-xl shadow border-l-4 border-blue-600">
-          <div className="flex justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Project Analysis Dashboard
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Project ID:{" "}
-                <code className="bg-gray-100 px-2 py-1 rounded">
-                  {project.id}
-                </code>
-              </p>
-              <p className="text-gray-500 text-sm mt-1">
-                Generated on {formatDate(project.created_at)}
-              </p>
-            </div>
-            {getStatusBadge(project.status)}
+      {/* Metrics */}
+      <MetricsSection {...metricsProps} />
+
+      {/* Requirements Analysis */}
+      <RequirementsSection {...requirementsSectionProps} />
+
+      {/* Tech Stack */}
+      <TechStackSection {...techStackProps} />
+
+      {/* Execution Plan */}
+      <ExecutionPlanSection {...executionPlanProps} />
+
+      {/* Risk Analysis */}
+      <RiskSection {...riskProps} />
+
+      {/* Regenerate Modal */}
+      <Modal
+        isOpen={showRegenerateModal}
+        onClose={() => setShowRegenerateModal(false)}
+        title="Regenerate Analysis"
+        size="md"
+        footer={
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setShowRegenerateModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setShowRegenerateModal(false)}>
+              Regenerate
+            </Button>
           </div>
-        </section>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-neutral-600 dark:text-neutral-400">
+            Choose the quality level for re-analysis:
+          </p>
 
-        {/* REQUIREMENTS */}
-        <section className="bg-white p-8 rounded-xl shadow">
-          <h2 className="text-2xl font-bold mb-6">Requirements Analysis</h2>
-
-          {[
-            "functional_requirements",
-            "non_functional_requirements",
-            "assumptions",
-          ].map((key) => (
-            <div key={key} className="mb-6">
-              <h3 className="font-semibold capitalize mb-2">
-                {key.replace(/_/g, " ")}
-              </h3>
-              <ul className="list-disc ml-6 space-y-1">
-                {(project.requirements?.[key] ?? []).map((item: string, i: number) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          {project.requirements?.missing_information?.length > 0 && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-              <h3 className="font-semibold mb-2">Missing Information</h3>
-              <ul className="list-disc ml-6">
-                {(project.requirements.missing_information ?? []).map(
-                  (item: string, i: number) => (
-                    <li key={i}>{item}</li>
-                  )
-                )}
-              </ul>
-            </div>
-          )}
-        </section>
-
-        {/* TECH STACK */}
-        <section className="bg-white p-8 rounded-xl shadow">
-          <h2 className="text-2xl font-bold mb-6">Tech Stack</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {Object.entries(project.tech_stack ?? {}).map(([key, value]: any) => (
-              <div key={key} className="border rounded p-5">
-                <h3 className="uppercase text-sm text-gray-500 mb-1">{key}</h3>
-                <p className="font-semibold">{value?.choice}</p>
-                <p className="text-sm text-gray-600 mt-1">{value?.reason}</p>
-              </div>
+          <div className="space-y-2">
+            {['Quick (2-3 min)', 'Balanced (5-7 min)', 'Complete (10-15 min)'].map((option) => (
+              <label key={option} className="flex items-center gap-3 p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800">
+                <input type="radio" name="quality" className="accent-accent" defaultChecked={option === 'Balanced (5-7 min)'} />
+                <span className="font-medium text-neutral-900 dark:text-neutral-50">{option}</span>
+              </label>
             ))}
           </div>
-        </section>
-
-        {/* TASK PLAN */}
-        <section className="bg-white p-8 rounded-xl shadow">
-          <h2 className="text-2xl font-bold mb-6">Execution Plan</h2>
-          {(project.task_plan?.modules ?? []).map((module: any, i: number) => (
-            <div key={i} className="mb-6 border-l-4 border-green-500 pl-4">
-              <h3 className="font-semibold mb-2">{module.module_name}</h3>
-              {(module.tasks ?? []).map((task: any, j: number) => (
-                <div key={j} className="flex justify-between text-sm mb-1">
-                  <span>{task.task_name}</span>
-                  <span className="font-medium">{task.estimate_days} days</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </section>
-
-        {/* RISKS */}
-        <section className="bg-white p-8 rounded-xl shadow">
-          <h2 className="text-2xl font-bold mb-6">Risk Analysis</h2>
-          {(project.risks?.risks ?? []).map((risk: any, i: number) => {
-            const cfg = severityConfig[risk?.severity];
-            return (
-              <div key={i} className={`p-4 rounded mb-4 ${cfg.bg}`}>
-                <div className="flex justify-between mb-1">
-                  <p className="font-medium">{risk.risk}</p>
-                  <span className={`px-2 py-0.5 rounded text-xs ${cfg.badge}`}>
-                    {risk.severity}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700">
-                  Mitigation: {risk.mitigation}
-                </p>
-              </div>
-            );
-          })}
-        </section>
-
-        {/* METRICS */}
-        {metrics && (
-          <section className="bg-white p-8 rounded-xl shadow">
-            <h2 className="text-2xl font-bold mb-6">System Metrics</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(metrics.agents ?? {}).map(([agent, data]: any) => {
-                const avgLatency = Math.round(
-                  (data.totalLatencyMs ?? 0) / Math.max(1, (data.totalCalls ?? 1))
-                );
-                return (
-                  <div key={agent} className="border rounded p-5">
-                    <h3 className="font-semibold capitalize mb-2">
-                      {agent} Agent
-                    </h3>
-                    <p>Total Calls: {data.totalCalls}</p>
-                    <p>Failures: {data.failures}</p>
-                    <p>Retries: {data.totalRetries}</p>
-                    <p>Avg Latency: {avgLatency} ms</p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-      </div>
-    </div>
+        </div>
+      </Modal>
+    </main>
   );
 }
