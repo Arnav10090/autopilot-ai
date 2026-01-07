@@ -131,10 +131,17 @@ export function Modal({
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
+        role="button"
       />
 
       {/* Modal */}
-      <div className={`relative bg-surface dark:bg-surface-dark rounded-2xl shadow-2xl ${sizeClasses[size]} w-full animate-fade-in`}>
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
+        className={`relative bg-surface dark:bg-surface-dark rounded-2xl shadow-2xl ${sizeClasses[size]} w-full animate-fade-in`}
+      >
         {/* Header */}
         {(title || closeButton) && (
           <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
