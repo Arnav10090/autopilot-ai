@@ -145,7 +145,7 @@ export function Modal({
         {/* Header */}
         {(title || closeButton) && (
           <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
-            {title && <h2 className="font-display font-700 text-lg text-neutral-900 dark:text-neutral-50">{title}</h2>}
+            {title && <h2 id="modal-title" className="font-display font-700 text-lg text-neutral-900 dark:text-neutral-50">{title}</h2>}
             {!title && <div />}
             {closeButton && (
               <button
