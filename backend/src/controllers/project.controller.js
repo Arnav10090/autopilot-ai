@@ -6,6 +6,8 @@ export async function analyzeProject(req, res) {
   try {
     const analysisResult = await runFullAnalysis(req.body);
 
+    console.log("ANALYSIS RESULT:", JSON.stringify(analysisResult, null, 2));
+
     const projectId = await saveProject(req.body, analysisResult);
 
     return res.json({

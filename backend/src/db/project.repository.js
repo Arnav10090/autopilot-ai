@@ -23,6 +23,12 @@ export async function saveProject(input, output) {
       ]
     );
 
+    // Ensure outputs are stored as JSON strings (or null) to avoid inserting undefined/null objects
+    const requirementsValue = output.requirements ? JSON.stringify(output.requirements) : null;
+    const techStackValue = output.tech_stack ? JSON.stringify(output.tech_stack) : null;
+    const taskPlanValue = output.task_plan ? JSON.stringify(output.task_plan) : null;
+    const risksValue = output.risks ? JSON.stringify(output.risks) : null;
+
     await client.query(
       `INSERT INTO project_outputs
        (id, project_id, requirements, tech_stack, task_plan, risks)
@@ -30,10 +36,10 @@ export async function saveProject(input, output) {
       [
         uuidv4(),
         projectId,
-        output.requirements,
-        output.tech_stack || null,
-        output.task_plan || null,
-        output.risks || null
+        requirementsValue,
+        techStackValue,
+        taskPlanValue,
+        risksValue
       ]
     );
 
