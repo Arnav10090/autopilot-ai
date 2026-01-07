@@ -8,10 +8,12 @@ import { TechStackSection } from '@/components/ProjectDetail/TechStackSection';
 import { ExecutionPlanSection } from '@/components/ProjectDetail/ExecutionPlanSection';
 import { RiskSection } from '@/components/ProjectDetail/RiskSection';
 import { MetricsSection } from '@/components/ProjectDetail/MetricsSection';
+import { ExportModal } from '@/components/ProjectDetail/ExportModal';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { exportProject } from '@/services/exportHandler';
 
 export default function ProjectDetailPage() {
   const params = useParams();
