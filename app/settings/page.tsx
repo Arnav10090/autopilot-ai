@@ -7,31 +7,6 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Toggle } from '@/components/ui/Toggle';
 
-export function Toggle({ label, description, defaultChecked }: any) {
-  const [enabled, setEnabled] = useState(defaultChecked);
-
-  return (
-    <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
-      <div>
-        <p className="font-medium text-neutral-900 dark:text-neutral-50">{label}</p>
-        {description && <p className="text-sm text-neutral-600 dark:text-neutral-400">{description}</p>}
-      </div>
-      <button
-        onClick={() => setEnabled(!enabled)}
-        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-          enabled ? 'bg-accent' : 'bg-neutral-300 dark:bg-neutral-700'
-        }`}
-      >
-        <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-            enabled ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
-
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState('sk_test_••••••••••••••••');
   const [showKey, setShowKey] = useState(false);
