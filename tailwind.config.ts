@@ -128,6 +128,12 @@ const config: Config = {
         'shimmer': 'shimmer 2s infinite',
         'rotate-slow': 'rotate-slow 12s linear infinite',
         'bob': 'bob 3s var(--easing-in-out) infinite',
+        'scale-in': 'scale-in var(--duration-300) var(--easing-out) forwards',
+        'slide-in-right': 'slide-in-right var(--duration-300) var(--easing-out) forwards',
+        'slide-in-left': 'slide-in-left var(--duration-300) var(--easing-out) forwards',
+        'glow-pulse': 'glow-pulse var(--duration-2000) var(--easing-in-out) infinite',
+        'float': 'float 3s var(--easing-in-out) infinite',
+        'bounce-in': 'bounce-in var(--duration-500) var(--easing-bounce) forwards',
       },
       keyframes: {
         'fade-in': {
@@ -157,6 +163,31 @@ const config: Config = {
         'bob': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-8px)' },
+        },
+        'scale-in': {
+          'from': { opacity: '0', transform: 'scale(0.95)' },
+          'to': { opacity: '1', transform: 'scale(1)' },
+        },
+        'slide-in-right': {
+          'from': { opacity: '0', transform: 'translateX(-16px)' },
+          'to': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'slide-in-left': {
+          'from': { opacity: '0', transform: 'translateX(16px)' },
+          'to': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 20px rgba(37, 99, 235, 0.5), 0 0 30px rgba(6, 182, 212, 0.3)' },
+          '50%': { boxShadow: '0 0 30px rgba(37, 99, 235, 0.8), 0 0 40px rgba(6, 182, 212, 0.5)' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'bounce-in': {
+          '0%': { opacity: '0', transform: 'scale(0.8) translateY(20px)' },
+          '50%': { opacity: '1' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
         },
       },
       backgroundImage: {

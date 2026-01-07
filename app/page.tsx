@@ -93,11 +93,12 @@ export default function Home() {
               <Card
                 key={index}
                 isHoverable
-                className="animate-slide-up"
+                className="animate-slide-up group overflow-hidden relative"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <CardBody className="space-y-4">
-                  <div className="text-5xl">{feature.icon}</div>
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent-2/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <CardBody className="space-y-4 relative z-10">
+                  <div className="text-5xl group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
                   <h3 className="text-xl font-display font-700 text-neutral-900 dark:text-neutral-50">
                     {feature.title}
                   </h3>

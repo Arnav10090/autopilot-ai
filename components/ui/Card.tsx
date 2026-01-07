@@ -5,6 +5,8 @@ interface CardProps {
   className?: string;
   isHoverable?: boolean;
   variant?: 'default' | 'glass' | 'elevated';
+  role?: string;
+  tabIndex?: number;
 }
 
 export function Card({
@@ -12,6 +14,8 @@ export function Card({
   className = '',
   isHoverable = false,
   variant = 'default',
+  role,
+  tabIndex,
 }: CardProps) {
   const variantClasses = {
     default: 'bg-surface dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800',
@@ -19,11 +23,15 @@ export function Card({
     elevated: 'bg-surface dark:bg-surface-dark shadow-lg',
   };
 
-  const hoverClasses = isHoverable ? 'hover:shadow-lg hover:border-accent/30 transition-all duration-300 transform hover:-translate-y-1' : '';
+  const hoverClasses = isHoverable
+    ? 'cursor-pointer hover:shadow-lg hover:border-accent/30 hover:-translate-y-1 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2'
+    : 'transition-all duration-300';
 
   return (
     <div
       className={`rounded-xl p-6 ${variantClasses[variant]} ${hoverClasses} ${className}`}
+      role={role}
+      tabIndex={isHoverable ? (tabIndex ?? 0) : undefined}
     >
       {children}
     </div>

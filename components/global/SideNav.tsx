@@ -67,7 +67,7 @@ export function SideNav() {
           isOpen ? 'w-64' : '-translate-x-full lg:translate-x-0 lg:w-64'
         } ${isCollapsed && !isOpen ? 'lg:w-20' : ''}`}
       >
-        <nav className="h-full overflow-y-auto">
+        <nav id="main-nav" className="h-full overflow-y-auto">
           {/* Navigation items */}
           <ul className="p-4 space-y-2">
             {NAV_ITEMS.map((item) => (
