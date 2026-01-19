@@ -49,7 +49,6 @@ A modern, classy, highly interactive Project Analysis web app built with Next.js
 - Accordion-style collapsible answers
 - Documentation links (Getting Started, Best Practices, API, Integrations, Analytics, Security)
 - Contact support section
-- Useful resource links
 
 ## Component Library
 

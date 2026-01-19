@@ -1,16 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
+import { ThemeToggle } from '@/components/global/ThemeToggle';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,25 +21,44 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual sign-in logic
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Sign in with:', { email, password });
-    } catch (err) {
-      setError('Invalid email or password');
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid email or password');
+      }
+
+      // Store user session
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect to home on success
+      router.push('/');
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
-        <Link href="/" className="flex justify-center mb-8 group">
-          <div className="w-12 h-12 bg-gradient-to-br from-accent to-accent-2 rounded-xl flex items-center justify-center group-hover:shadow-lg transition-shadow">
+        <div className="flex justify-center mb-8">
+          <div className="w-12 h-12 bg-neutral-900 dark:bg-gradient-to-br dark:from-accent dark:to-accent-2 rounded-xl flex items-center justify-center shadow-lg">
             <span className="text-white font-display font-bold text-lg">AP</span>
           </div>
-        </Link>
+        </div>
 
         <Card>
           <CardHeader title="Sign In" subtitle="Welcome back to AutoPilot AI" />
@@ -122,18 +144,6 @@ export default function SignInPage() {
             </p>
           </CardFooter>
         </Card>
-
-        {/* Footer text */}
-        <p className="text-xs text-center text-neutral-500 dark:text-neutral-500 mt-6">
-          By signing in, you agree to our{' '}
-          <Link href="/terms" className="hover:text-accent transition-colors">
-            Terms of Service
-          </Link>
-          {' '}and{' '}
-          <Link href="/privacy" className="hover:text-accent transition-colors">
-            Privacy Policy
-          </Link>
-        </p>
       </div>
     </div>
   );

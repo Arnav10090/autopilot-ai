@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/global/Header";
-import { SideNav } from "@/components/global/SideNav";
-import { SkipLinks } from "@/components/global/SkipLinks";
-import { Footer } from "@/components/global/Footer";
 import "./globals.css";
+
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SearchProvider } from "@/contexts/SearchContext";
 
 export const metadata: Metadata = {
   title: "AutoPilot AI - Project Planning Tool",
@@ -16,17 +15,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-bg dark:bg-bg-dark text-neutral-900 dark:text-neutral-50">
-        <SkipLinks />
-        <Header />
-        <div className="flex min-h-screen">
-          <SideNav />
-          <main id="main-content" className="flex-1 lg:ml-0">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const savedTheme = localStorage.getItem('theme');
+                  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (savedTheme === 'dark' || (!savedTheme && systemTheme)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })()
+            `,
+          }}
+        />
+        <ThemeProvider>
+          <SearchProvider>
             {children}
-          </main>
-        </div>
-        <Footer />
+          </SearchProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

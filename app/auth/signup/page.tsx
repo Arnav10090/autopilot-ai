@@ -1,11 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { ThemeToggle } from '@/components/global/ThemeToggle';
+import { TermsContent } from '@/components/legal/TermsContent';
+import { PrivacyContent } from '@/components/legal/PrivacyContent';
 
 function getPasswordStrength(password: string) {
   if (!password) return { strength: 0, label: 'No password', color: 'bg-neutral-300' };
@@ -21,21 +26,37 @@ export default function SignUpPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
+    dob: '',
     password: '',
     confirmPassword: '',
   });
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const passwordStrength = getPasswordStrength(formData.password);
   const passwordsMatch = formData.password === formData.confirmPassword && formData.password.length > 0;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    if (name === 'phone') {
+      // Only allow numbers and limit to 10 digits
+      const numericValue = value.replace(/\D/g, '').slice(0, 10);
+      setFormData({
+        ...formData,
+        [name]: numericValue,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,28 +73,58 @@ export default function SignUpPage() {
       return;
     }
 
+    if (formData.phone.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual sign-up logic
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Sign up with:', formData);
-    } catch (err) {
-      setError('Failed to create account');
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          dob: formData.dob,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create account');
+      }
+
+      // Store user session (auto-login)
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect to home on success
+      router.push('/');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
-        <Link href="/" className="flex justify-center mb-8 group">
-          <div className="w-12 h-12 bg-gradient-to-br from-accent to-accent-2 rounded-xl flex items-center justify-center group-hover:shadow-lg transition-shadow">
+        <div className="flex justify-center mb-8">
+          <div className="w-12 h-12 bg-neutral-900 dark:bg-gradient-to-br dark:from-accent dark:to-accent-2 rounded-xl flex items-center justify-center shadow-lg">
             <span className="text-white font-display font-bold text-lg">AP</span>
           </div>
-        </Link>
+        </div>
 
         <Card>
           <CardHeader title="Create Account" subtitle="Join AutoPilot AI to get started" />
@@ -103,6 +154,27 @@ export default function SignUpPage() {
                 placeholder="you@example.com"
                 name="email"
                 value={formData.email}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
+
+              <Input
+                label="Phone Number"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
+
+              <Input
+                label="Date of Birth"
+                type="date"
+                name="dob"
+                value={formData.dob}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
@@ -164,13 +236,13 @@ export default function SignUpPage() {
                 />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-accent hover:text-accent-2 font-medium">
+                  <button type="button" onClick={() => setShowTerms(true)} className="text-accent hover:text-accent-2 font-medium hover:underline">
                     Terms of Service
-                  </Link>
+                  </button>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-accent hover:text-accent-2 font-medium">
+                  <button type="button" onClick={() => setShowPrivacy(true)} className="text-accent hover:text-accent-2 font-medium hover:underline">
                     Privacy Policy
-                  </Link>
+                  </button>
                 </span>
               </label>
 
@@ -221,6 +293,41 @@ export default function SignUpPage() {
           </CardFooter>
         </Card>
       </div>
+
+
+      {/* Terms Modal */}
+      <Modal
+        isOpen={showTerms}
+        onClose={() => setShowTerms(false)}
+        title="Terms of Service"
+        size="lg"
+        closeButton={false}
+        closeOnOverlayClick={false}
+      >
+        <div className="max-h-[60vh] overflow-y-auto p-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <TermsContent />
+        </div>
+        <div className="mt-6 flex justify-end">
+          <Button onClick={() => setShowTerms(false)}>Close</Button>
+        </div>
+      </Modal>
+
+      {/* Privacy Modal */}
+      <Modal
+        isOpen={showPrivacy}
+        onClose={() => setShowPrivacy(false)}
+        title="Privacy Policy"
+        size="lg"
+        closeButton={false}
+        closeOnOverlayClick={false}
+      >
+        <div className="max-h-[60vh] overflow-y-auto p-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <PrivacyContent />
+        </div>
+        <div className="mt-6 flex justify-end">
+          <Button onClick={() => setShowPrivacy(false)}>Close</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -4,6 +4,7 @@ export interface CreateProjectPayload {
   deadline: string;
   skill_level: string;
   constraints?: string;
+  quality?: 'quick' | 'balanced' | 'complete';
 }
 
 export interface ProjectResult {

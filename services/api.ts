@@ -1,12 +1,12 @@
 import { CreateProjectPayload } from "@/types/project";
 
-export async function analyzeProject(data: CreateProjectPayload) {
+export async function analyzeProject(data: CreateProjectPayload, userId?: number) {
   const res = await fetch("http://localhost:5000/api/projects/analyze", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify({ ...data, user_id: userId })
   });
 
   if (!res.ok) {
@@ -38,8 +38,13 @@ export async function getProjectById(id: string) {
   return res.json();
 }
 
-export async function getMetrics() {
-  const res = await fetch("http://localhost:5000/api/metrics", {
+export async function getMetrics(range: string = '24h', userId?: number | null) {
+  let url = `http://localhost:5000/api/metrics?range=${range}`;
+  if (userId) {
+    url += `&user_id=${userId}`;
+  }
+
+  const res = await fetch(url, {
     cache: "no-store"
   });
 

@@ -8,6 +8,7 @@ export async function runRequirementAgent(input) {
     agentName: "requirements",
     schema: requirementsSchema,
     fallback: requirementsFallback,
+    timeoutMs: 45000,
     runAgent: async () => {
       const maxAttempts = 3;
 

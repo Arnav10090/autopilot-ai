@@ -55,6 +55,7 @@ export function ExportModal({
         ...selectedOptions,
         format: selectedFormat,
       });
+      // Don't close immediately to show success state or just finish
       onClose();
     } catch (err: any) {
       setError(err.message || 'Export failed');
@@ -64,109 +65,165 @@ export function ExportModal({
   };
 
   const exportFormats = [
-    { id: 'pdf', label: 'PDF', description: 'Best for sharing and printing', icon: '📄' },
-    { id: 'docx', label: 'Word', description: 'Editable document format', icon: '📝' },
-    { id: 'csv', label: 'CSV', description: 'Data export format', icon: '📊' },
-    { id: 'json', label: 'JSON', description: 'Structured data format', icon: '{}' },
-    { id: 'markdown', label: 'Markdown', description: 'Plain text with formatting', icon: '📋' },
+    { id: 'pdf', label: 'PDF', description: 'Best for sharing', icon: '📄', color: 'text-red-500' },
+    { id: 'docx', label: 'Word', description: 'Editable document', icon: '📝', color: 'text-blue-500' },
+    { id: 'csv', label: 'CSV', description: 'Data spreadsheet', icon: '📊', color: 'text-green-500' },
+    { id: 'json', label: 'JSON', description: 'Structured data', icon: '{ }', color: 'text-yellow-500' },
+    { id: 'markdown', label: 'Markdown', description: 'Plain text', icon: '📋', color: 'text-purple-500' },
   ];
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Export Project"
+      title="Export Project Analysis"
       size="lg"
       footer={
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} disabled={isExporting}>
-            Cancel
-          </Button>
-          <Button onClick={handleExport} disabled={isExporting || !selectedFormat}>
-            {isExporting ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                Exporting...
-              </>
-            ) : (
-              <>📥 Export</>
-            )}
-          </Button>
+        <div className="flex justify-between items-center w-full">
+            <div className='text-sm text-neutral-500'>
+                {Object.values(selectedOptions).filter(Boolean).length - 1} sections selected
+            </div>
+            <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} disabled={isExporting}>
+                Cancel
+            </Button>
+            <Button 
+                onClick={handleExport} 
+                disabled={isExporting || !selectedFormat}
+                className="bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 text-white shadow-lg shadow-accent/20 transition-all duration-300"
+            >
+                {isExporting ? (
+                <>
+                    <Spinner size="sm" className="mr-2" />
+                    Generating...
+                </>
+                ) : (
+                <div className="flex items-center gap-2">
+                    <span>Export as {exportFormats.find(f => f.id === selectedFormat)?.label}</span>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                </div>
+                )}
+            </Button>
+            </div>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-8 py-2">
         {/* Format Selection */}
-        <div className="space-y-3">
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-50">Export Format</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 ml-1">
+            Select Format
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {exportFormats.map((format) => (
               <button
                 key={format.id}
                 onClick={() => setSelectedFormat(format.id)}
-                className={`p-3 rounded-lg border-2 transition-all text-left ${
-                  selectedFormat === format.id
-                    ? 'border-accent bg-accent/5'
-                    : 'border-neutral-200 dark:border-neutral-700 hover:border-accent/50'
-                }`}
+                className={`relative group p-4 rounded-xl border-2 text-left transition-all duration-200 outline-none
+                  ${selectedFormat === format.id
+                    ? 'border-accent bg-accent/5 shadow-md shadow-accent/10 ring-1 ring-accent/50'
+                    : 'border-neutral-200 dark:border-neutral-700 hover:border-accent/40 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                  }`}
               >
-                <div className="text-2xl mb-2">{format.icon}</div>
-                <p className="font-medium text-neutral-900 dark:text-neutral-50">{format.label}</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">{format.description}</p>
+                <div className={`text-2xl mb-3 transition-transform duration-300 group-hover:scale-110 ${format.color}`}>
+                    {format.icon}
+                </div>
+                <div className="space-y-1">
+                    <p className={`font-semibold transition-colors ${selectedFormat === format.id ? 'text-accent' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                        {format.label}
+                    </p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">
+                        {format.description}
+                    </p>
+                </div>
+                
+                {selectedFormat === format.id && (
+                  <div className="absolute top-3 right-3 text-accent">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </button>
             ))}
           </div>
         </div>
 
         {/* Content Selection */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-50">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between ml-1">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Include Sections
             </h3>
-            <Badge variant="info">Optional</Badge>
+            <span className="text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full">
+                Customizable
+            </span>
           </div>
-          <div className="space-y-2">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               {
-                key: 'includeRequirements' as const,
+                key: 'includeRequirements',
                 label: 'Requirements Analysis',
-                description: 'Functional, non-functional, and assumptions',
+                desc: 'Functional & Non-functional',
+                icon: '📋'
               },
               {
-                key: 'includeTechStack' as const,
-                label: 'Tech Stack Recommendations',
-                description: 'Technologies and reasoning',
+                key: 'includeTechStack',
+                label: 'Tech Stack',
+                desc: 'Recommendations & Reasoning',
+                icon: '💻'
               },
               {
-                key: 'includeRisks' as const,
+                key: 'includeRisks',
                 label: 'Risk Analysis',
-                description: 'Identified risks and mitigations',
+                desc: 'Risks & Mitigations',
+                icon: '⚠️'
               },
               {
-                key: 'includeMetrics' as const,
-                label: 'Metrics & Performance',
-                description: 'KPIs and analysis metrics',
+                key: 'includeMetrics',
+                label: 'Metrics',
+                desc: 'KPIs & Estimates',
+                icon: '📊'
               },
               {
-                key: 'includeNotes' as const,
-                label: 'Notes & Attachments',
-                description: 'Your notes and uploaded files',
+                key: 'includeNotes',
+                label: 'Notes',
+                desc: 'Additional Comments',
+                icon: '📝'
               },
             ].map((section) => (
-              <label key={section.key} className="flex items-start gap-3 p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  checked={selectedOptions[section.key]}
-                  onChange={() => toggleOption(section.key)}
-                  className="mt-1 w-4 h-4 rounded accent-accent"
-                />
+              <label 
+                key={section.key} 
+                className={`flex items-start gap-4 p-3 rounded-lg border border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-all duration-200
+                    ${selectedOptions[section.key as keyof ExportOptions] ? 'bg-neutral-50/50 dark:bg-neutral-800/50' : 'opacity-80 hover:opacity-100'}
+                `}
+              >
+                <div className="relative flex items-center mt-1">
+                    <input
+                    type="checkbox"
+                    checked={selectedOptions[section.key as keyof ExportOptions] as boolean}
+                    onChange={() => toggleOption(section.key as Exclude<keyof ExportOptions, 'format'>)}
+                    className="peer w-5 h-5 rounded border-2 border-neutral-300 text-accent focus:ring-accent/20 transition-all checked:bg-accent checked:border-accent"
+                    />
+                    <div className="absolute inset-0 pointer-events-none text-white hidden peer-checked:block">
+                        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                
                 <div className="flex-1">
-                  <p className="font-medium text-neutral-900 dark:text-neutral-50">
-                    {section.label}
-                  </p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                    {section.description}
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg opacity-80">{section.icon}</span>
+                    <p className={`font-medium transition-colors ${selectedOptions[section.key as keyof ExportOptions] ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                        {section.label}
+                    </p>
+                  </div>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-0.5 ml-7">
+                    {section.desc}
                   </p>
                 </div>
               </label>
@@ -174,15 +231,41 @@ export function ExportModal({
           </div>
         </div>
 
-        {/* File Info */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
-          <p className="text-sm text-neutral-700 dark:text-neutral-300">
-            <strong>File name:</strong> {projectTitle.replace(/\s+/g, '-').toLowerCase()}.{selectedFormat}
-          </p>
+        {/* File Preview */}
+        <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 rounded-xl">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-white dark:bg-neutral-800 rounded-lg shadow-sm">
+                    <span className="text-xl">
+                        {exportFormats.find(f => f.id === selectedFormat)?.icon}
+                    </span>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-neutral-200">
+                        {projectTitle.replace(/\s+/g, '-').toLowerCase()}.{selectedFormat}
+                    </p>
+                    <p className="text-xs text-neutral-500">
+                        {Object.values(selectedOptions).filter(Boolean).length - 1} sections included
+                    </p>
+                </div>
+            </div>
+            <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={handleExport}
+                disabled={isExporting}
+                className="text-accent hover:text-accent-2 hover:bg-accent/5"
+            >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+            </Button>
         </div>
 
         {error && (
-          <div className="p-3 bg-danger/10 text-danger rounded-lg text-sm">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-red-900/30 flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             {error}
           </div>
         )}

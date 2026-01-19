@@ -10,6 +10,7 @@ interface ModalProps {
   footer?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   closeButton?: boolean;
+  closeOnOverlayClick?: boolean;
 }
 
 export function Modal({
@@ -20,6 +21,7 @@ export function Modal({
   footer,
   size = 'md',
   closeButton = true,
+  closeOnOverlayClick = true,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
@@ -129,7 +131,7 @@ export function Modal({
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={closeOnOverlayClick ? onClose : undefined}
         aria-hidden="true"
         role="button"
       />

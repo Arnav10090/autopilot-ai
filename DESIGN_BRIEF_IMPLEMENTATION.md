@@ -325,7 +325,6 @@ All core UI components implemented with proper accessibility:
 - ✅ Create and delete notes
 - ✅ AI-generated summaries
 - ✅ Expandable note preview
-- ✅ Tag system for organization
 - ✅ File uploads with size validation
 - ✅ Supported file types (PDF, Images, Documents)
 - ✅ File preview and download

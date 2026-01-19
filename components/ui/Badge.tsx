@@ -5,25 +5,32 @@ interface BadgeProps {
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
   className?: string;
+  pulse?: boolean;
 }
 
-export function Badge({ variant = 'default', size = 'md', children, className = '' }: BadgeProps) {
+export function Badge({ variant = 'default', size = 'md', children, className = '', pulse = false }: BadgeProps) {
   const variantClasses = {
-    default: 'bg-accent/10 text-accent dark:bg-accent/20',
-    success: 'bg-success/10 text-success dark:bg-success/20',
-    warning: 'bg-warning/10 text-warning dark:bg-warning/20',
-    danger: 'bg-danger/10 text-danger dark:bg-danger/20',
-    info: 'bg-accent-2/10 text-accent-2 dark:bg-accent-2/20',
+    default: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+    success: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    warning: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    danger: 'bg-red-500/15 text-red-400 border-red-500/30',
+    info: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
   };
 
   const sizeClasses = {
-    sm: 'px-2 py-1 text-xs font-medium rounded-md',
+    sm: 'px-2.5 py-1 text-xs font-medium rounded-md',
     md: 'px-3 py-1.5 text-sm font-medium rounded-lg',
     lg: 'px-4 py-2 text-base font-semibold rounded-lg',
   };
 
   return (
-    <span className={`inline-flex items-center ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 border backdrop-blur-sm ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}>
+      {pulse && (
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+        </span>
+      )}
       {children}
     </span>
   );

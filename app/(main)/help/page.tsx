@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { useChat } from '@/contexts/ChatContext';
 
 interface FAQItem {
   id: string;
@@ -120,10 +122,26 @@ function FAQItem({ item, isOpen, onToggle }: { item: FAQItem; isOpen: boolean; o
   );
 }
 
+interface DocItem {
+  icon: string;
+  title: string;
+  description: string;
+  content: string;
+}
+
 export default function HelpPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQs, setExpandedFAQs] = useState<Set<string>>(new Set());
+  const [selectedDoc, setSelectedDoc] = useState<DocItem | null>(null);
+  
+  const { toggleOpen, isOpen } = useChat();
+  
+  const openChat = () => {
+    if (!isOpen) {
+      toggleOpen();
+    }
+  };
 
   const filteredFAQs = FAQ_ITEMS.filter((item) => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
@@ -143,37 +161,86 @@ export default function HelpPage() {
     setExpandedFAQs(newExpanded);
   };
 
+  const docs: DocItem[] = [
+    {
+      icon: '🚀',
+      title: 'Getting Started',
+      description: 'Learn how to create your first project and analyze requirements.',
+      content: 'This guide will walk you through the process of setting up your account, creating your first project, and interpreting the initial analysis results. Start by clicking the "New Project" button on your dashboard.',
+    },
+    {
+      icon: '🎯',
+      title: 'Best Practices',
+      description: 'Tips and strategies for getting the most accurate analysis results.',
+      content: 'To get the best results from our AI agents, be specific in your project descriptions. Mention key stakeholders, expected user load, and specific technology preferences if you have them.',
+    },
+    {
+      icon: '🔌',
+      title: 'API Reference',
+      description: 'Complete API documentation for integrating AutoPilot AI into your workflow.',
+      content: 'Our REST API allows you to programmatically create projects and retrieve analysis results. Authentication is handled via API keys which can be generated in your settings.',
+    },
+    {
+      icon: '🛠️',
+      title: 'Integrations',
+      description: 'Connect AutoPilot AI with your favorite tools and services.',
+      content: 'AutoPilot AI integrates with Jira, GitHub, and Slack depending on your plan. This section covers how to configure webhooks and OAuth connections.',
+    },
+    {
+      icon: '📊',
+      title: 'Analytics',
+      description: 'Understanding metrics, KPIs, and agent performance data.',
+      content: 'The Analytics dashboard provides insights into how many projects you have analyzed, the average complexity score, and agent performance metrics over time.',
+    },
+    {
+      icon: '🔒',
+      title: 'Security',
+      description: 'Data protection, privacy policies, and security best practices.',
+      content: 'We take security seriously. All project data is encrypted at rest and in transit. Read our full security policy here along with our compliance certifications.',
+    },
+  ];
+
   return (
-    <main className="px-4 sm:px-6 lg:px-8 py-8 max-w-4xl mx-auto">
+    <main className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-12 space-y-4">
         <div className="animate-slide-up">
           <h1 className="text-4xl sm:text-5xl font-display font-700 text-neutral-900 dark:text-neutral-50 mb-2">
-            Help & Support
+            <span className="gradient-text">Help & Support</span>
           </h1>
           <p className="text-lg text-neutral-600 dark:text-neutral-400">
             Find answers to common questions and learn how to get the most out of AutoPilot AI
           </p>
         </div>
 
-        {/* Quick Links */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <a href="#faq" className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors">
-            <span className="text-xl">❓</span>
-            <span className="text-sm font-medium">FAQ</span>
-          </a>
-          <a href="#documentation" className="flex items-center gap-2 p-3 rounded-lg bg-accent-2/10 text-accent-2 hover:bg-accent-2/20 transition-colors">
-            <span className="text-xl">📚</span>
-            <span className="text-sm font-medium">Docs</span>
-          </a>
-          <a href="mailto:support@autopilot.ai" className="flex items-center gap-2 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
-            <span className="text-xl">✉️</span>
-            <span className="text-sm font-medium">Email</span>
-          </a>
-          <a href="#" className="flex items-center gap-2 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
-            <span className="text-xl">💬</span>
-            <span className="text-sm font-medium">Chat</span>
-          </a>
+        {/* Quick Links Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          {[
+            { label: 'FAQ', icon: '❓', href: '#faq', isChat: false },
+            { label: 'Docs', icon: '📚', href: '#documentation', isChat: false },
+            { label: 'Email', icon: '✉️', href: 'mailto:support@autopilot.ai', isChat: false },
+            { label: 'Chat', icon: '💬', href: '#', isChat: true },
+          ].map((link, i) => (
+            link.isChat ? (
+              <button
+                key={i}
+                onClick={openChat}
+                className="group flex items-center justify-center gap-3 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm dark:shadow-md font-medium border border-neutral-200 dark:border-transparent"
+              >
+                <span className="text-xl group-hover:scale-110 transition-transform">{link.icon}</span>
+                <span>{link.label}</span>
+              </button>
+            ) : (
+              <a
+                key={i}
+                href={link.href}
+                className="group flex items-center justify-center gap-3 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm dark:shadow-md font-medium border border-neutral-200 dark:border-transparent"
+              >
+                <span className="text-xl group-hover:scale-110 transition-transform">{link.icon}</span>
+                <span>{link.label}</span>
+              </a>
+            )
+          ))}
         </div>
       </div>
 
@@ -210,7 +277,7 @@ export default function HelpPage() {
               }}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-sm ${
                 selectedCategory === cat.id
-                  ? 'bg-accent text-white shadow-md'
+                  ? 'bg-neutral-900 dark:bg-accent text-white shadow-md'
                   : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
               }`}
               aria-pressed={selectedCategory === cat.id}
@@ -264,51 +331,14 @@ export default function HelpPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            {
-              icon: '🚀',
-              title: 'Getting Started',
-              description: 'Learn how to create your first project and analyze requirements.',
-              href: '#',
-            },
-            {
-              icon: '🎯',
-              title: 'Best Practices',
-              description: 'Tips and strategies for getting the most accurate analysis results.',
-              href: '#',
-            },
-            {
-              icon: '🔌',
-              title: 'API Reference',
-              description: 'Complete API documentation for integrating AutoPilot AI into your workflow.',
-              href: '#',
-            },
-            {
-              icon: '🛠️',
-              title: 'Integrations',
-              description: 'Connect AutoPilot AI with your favorite tools and services.',
-              href: '#',
-            },
-            {
-              icon: '📊',
-              title: 'Analytics',
-              description: 'Understanding metrics, KPIs, and agent performance data.',
-              href: '#',
-            },
-            {
-              icon: '🔒',
-              title: 'Security',
-              description: 'Data protection, privacy policies, and security best practices.',
-              href: '#',
-            },
-          ].map((doc, i) => (
-            <a
+          {docs.map((doc, i) => (
+            <button
               key={i}
-              href={doc.href}
-              className="group animate-slide-up"
+              onClick={() => setSelectedDoc(doc)}
+              className="group animate-slide-up text-left w-full"
               style={{ animationDelay: `${0.4 + i * 0.05}s` }}
             >
-              <Card isHoverable>
+              <Card isHoverable className="h-full">
                 <CardBody className="space-y-3">
                   <span className="text-4xl block">{doc.icon}</span>
                   <h3 className="text-lg font-display font-700 text-neutral-900 dark:text-neutral-50 group-hover:text-accent transition-colors">
@@ -323,7 +353,7 @@ export default function HelpPage() {
                   </span>
                 </CardBody>
               </Card>
-            </a>
+            </button>
           ))}
         </div>
       </section>
@@ -331,32 +361,33 @@ export default function HelpPage() {
       {/* Contact Section */}
       <section className="mb-16">
         <div className="animate-slide-up" style={{ animationDelay: '0.7s' }}>
-          <Card className="glass border-accent/30 dark:border-accent/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-2/5 pointer-events-none" />
-            <CardBody className="space-y-6 relative z-10">
-              <div className="text-center space-y-3">
-                <h2 className="text-3xl sm:text-4xl font-display font-700 text-neutral-900 dark:text-neutral-50">
-                  Need more help?
-                </h2>
-                <p className="text-lg text-neutral-600 dark:text-neutral-400">
-                  Can't find what you're looking for? Our support team is here to help.
-                </p>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-100 via-white to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 border border-neutral-200 dark:border-neutral-700/50 shadow-xl">
+            {/* Decorative elements */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-neutral-300/30 dark:bg-accent/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-neutral-200/50 dark:bg-accent-2/10 rounded-full blur-3xl" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-neutral-400 dark:via-accent to-transparent" />
+            
+            <div className="relative z-10 px-8 py-12 sm:py-16 text-center">
+              {/* Icon */}
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-800 mb-6">
+                <span className="text-3xl">💬</span>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <a href="mailto:support@autopilot.ai">
-                  <Button variant="outline">📧 Email Support</Button>
-                </a>
-                <a href="#">
-                  <Button>💬 Start Live Chat</Button>
-                </a>
-              </div>
-
-              <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
-                Average response time: 2 hours during business hours
+              
+              <h2 className="text-3xl sm:text-4xl font-display font-700 text-neutral-900 dark:text-neutral-50 mb-3">
+                Need more help?
+              </h2>
+              <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-8">
+                Can't find what you're looking for? Our support team is here to help.
               </p>
-            </CardBody>
-          </Card>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:support@autopilot.ai">
+                  <Button variant="secondary" size="lg">📧 Email Support</Button>
+                </a>
+                <Button onClick={openChat} size="lg">💬 Start Live Chat</Button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -386,6 +417,35 @@ export default function HelpPage() {
           </div>
         </div>
       </section>
+
+       {/* Documentation Modal */}
+       <Modal
+        isOpen={selectedDoc !== null}
+        onClose={() => setSelectedDoc(null)}
+        title={selectedDoc?.title}
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 text-4xl mb-4">
+            {selectedDoc?.icon}
+          </div>
+          <div className="prose dark:prose-invert max-w-none">
+            <p className="text-lg text-neutral-600 dark:text-neutral-300">
+              {selectedDoc?.description}
+            </p>
+            <hr className="my-6 border-neutral-200 dark:border-neutral-800" />
+            <h3 className="text-xl font-bold mb-4 font-display">Overview</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              {selectedDoc?.content}
+            </p>
+            <div className="mt-8 bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-lg border border-neutral-100 dark:border-neutral-800">
+              <p className="text-sm text-neutral-500 italic">
+                This serves as a preview of the documentation content. In a production environment, this would load the full article or redirect to a dedicated documentation platform.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }

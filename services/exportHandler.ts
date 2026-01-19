@@ -36,7 +36,23 @@ interface ExportData {
 /**
  * Generate CSV format
  */
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, BorderStyle, WidthType } from 'docx';
+import { saveAs } from 'file-saver';
+
+// Extend jsPDF type to include autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
+
+/**
+ * Generate CSV format
+ */
 export function generateCSV(data: ExportData): string {
+  // ... items existing CSV logic ...
   const rows: string[][] = [];
 
   // Header
@@ -209,6 +225,308 @@ export function generateMarkdown(data: ExportData): string {
 }
 
 /**
+ * Generate PDF format
+ */
+export function generatePDF(data: ExportData): void {
+  const doc = new jsPDF() as jsPDFWithAutoTable;
+  const pageWidth = doc.internal.pageSize.width;
+
+  // Title
+  doc.setFontSize(22);
+  doc.setTextColor(33, 33, 33);
+  doc.text(data.title, 14, 20);
+
+  // Metadata
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Project ID: ${data.id}`, 14, 28);
+  doc.text(`Date: ${new Date(data.createdAt).toLocaleDateString()}`, 14, 33);
+  doc.text(`Status: ${data.status}`, 14, 38);
+
+  let currentY = 45;
+
+  // Metrics Section
+  if (data.metrics && data.metrics.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Key Metrics', 14, currentY);
+    currentY += 6;
+
+    const metricsData = data.metrics.map(m => [m.label, `${m.value} ${m.unit || ''}`]);
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Metric', 'Value']],
+      body: metricsData,
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246] }, // Blue accent
+      styles: { fontSize: 10, cellPadding: 3 },
+      margin: { left: 14, right: 14 },
+    });
+
+    currentY = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Requirements Section
+  if (data.requirements) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Requirements Analysis', 14, currentY);
+    currentY += 6;
+
+    const reqData = [
+      ...data.requirements.functional.map(r => ['Functional', r]),
+      ...data.requirements.nonFunctional.map(r => ['Non-Functional', r]),
+      ...data.requirements.assumptions.map(r => ['Assumption', r]),
+    ];
+
+    if (reqData.length > 0) {
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Type', 'Requirement']],
+        body: reqData,
+        theme: 'striped',
+        headStyles: { fillColor: [75, 85, 99] }, // Gray
+        columnStyles: { 0: { cellWidth: 40 } },
+        margin: { left: 14, right: 14 },
+      });
+      currentY = doc.lastAutoTable.finalY + 10;
+    }
+  }
+
+  // Tech Stack Section
+  if (data.techStack && data.techStack.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 20;
+    }
+    doc.text('Tech Stack Recommendations', 14, currentY);
+    currentY += 6;
+
+    const techData = data.techStack.map(t => [t.category, t.choice, t.reason]);
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Category', 'Choice', 'Reasoning']],
+      body: techData,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129] }, // Green
+      columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 40 } },
+      margin: { left: 14, right: 14 },
+    });
+
+    currentY = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Risks Section
+  if (data.risks && data.risks.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 20;
+    }
+    doc.text('Risk Analysis', 14, currentY);
+    currentY += 6;
+
+    const riskData = data.risks.map(r => [r.risk, r.severity, r.mitigation]);
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Risk', 'Severity', 'Mitigation']],
+      body: riskData,
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68] }, // Red
+      columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 25 } },
+      margin: { left: 14, right: 14 },
+    });
+
+    currentY = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Notes
+  if (data.notes) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 20;
+    }
+    doc.text('Notes', 14, currentY);
+    currentY += 6;
+
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    const splitNotes = doc.splitTextToSize(data.notes, pageWidth - 28);
+    doc.text(splitNotes, 14, currentY);
+  }
+
+  doc.save(`${data.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+}
+
+/**
+ * Generate Word format
+ */
+export async function generateWord(data: ExportData): Promise<void> {
+  const children: any[] = [];
+
+  // Title
+  children.push(
+    new Paragraph({
+      text: data.title,
+      heading: HeadingLevel.TITLE,
+    })
+  );
+
+  // Metadata
+  children.push(new Paragraph({ text: `Project ID: ${data.id}`, spacing: { after: 100 } }));
+  children.push(new Paragraph({ text: `Status: ${data.status}`, spacing: { after: 100 } }));
+  children.push(new Paragraph({ text: `Date: ${new Date(data.createdAt).toLocaleDateString()}`, spacing: { after: 400 } }));
+
+  // Metrics
+  if (data.metrics && data.metrics.length > 0) {
+    children.push(new Paragraph({ text: "Key Metrics", heading: HeadingLevel.HEADING_1 }));
+
+    const metricRows = [
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ text: "Metric" })], width: { size: 50, type: WidthType.PERCENTAGE } }),
+          new TableCell({ children: [new Paragraph("Value")], width: { size: 50, type: WidthType.PERCENTAGE } }),
+        ],
+      }),
+      ...data.metrics.map(m => new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph(m.label)] }),
+          new TableCell({ children: [new Paragraph(`${m.value} ${m.unit || ''}`)] }),
+        ],
+      }))
+    ];
+
+    children.push(new Table({
+      rows: metricRows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.SINGLE, size: 1 },
+        bottom: { style: BorderStyle.SINGLE, size: 1 },
+        left: { style: BorderStyle.SINGLE, size: 1 },
+        right: { style: BorderStyle.SINGLE, size: 1 },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+        insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+      }
+    }));
+    children.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+  }
+
+  // Requirements
+  if (data.requirements) {
+    children.push(new Paragraph({ text: "Requirements Analysis", heading: HeadingLevel.HEADING_1 }));
+
+    const allReqs = [
+      ...data.requirements.functional.map(r => ({ type: 'Functional', text: r })),
+      ...data.requirements.nonFunctional.map(r => ({ type: 'Non-Functional', text: r })),
+      ...data.requirements.assumptions.map(r => ({ type: 'Assumption', text: r })),
+    ];
+
+    if (allReqs.length > 0) {
+      const reqRows = [
+        new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Type", bold: true })] })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Requirement", bold: true })] })], width: { size: 70, type: WidthType.PERCENTAGE } }),
+          ],
+        }),
+        ...allReqs.map(r => new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph(r.type)] }),
+            new TableCell({ children: [new Paragraph(r.text)] }),
+          ],
+        }))
+      ];
+
+      children.push(new Table({
+        rows: reqRows,
+        width: { size: 100, type: WidthType.PERCENTAGE },
+      }));
+      children.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+    }
+  }
+
+  // Tech Stack
+  if (data.techStack && data.techStack.length > 0) {
+    children.push(new Paragraph({ text: "Tech Stack Recommendations", heading: HeadingLevel.HEADING_1 }));
+
+    const techRows = [
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Category", bold: true })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Choice", bold: true })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Reason", bold: true })] })] }),
+        ]
+      }),
+      ...data.techStack.map(t => new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph(t.category)] }),
+          new TableCell({ children: [new Paragraph(t.choice)] }),
+          new TableCell({ children: [new Paragraph(t.reason)] }),
+        ],
+      }))
+    ];
+
+    children.push(new Table({
+      rows: techRows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+    }));
+    children.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+  }
+
+  // Risks
+  if (data.risks && data.risks.length > 0) {
+    children.push(new Paragraph({ text: "Risk Analysis", heading: HeadingLevel.HEADING_1 }));
+
+    const riskRows = [
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Risk", bold: true })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Severity", bold: true })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Mitigation", bold: true })] })] }),
+        ]
+      }),
+      ...data.risks.map(r => new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph(r.risk)] }),
+          new TableCell({ children: [new Paragraph(r.severity)] }),
+          new TableCell({ children: [new Paragraph(r.mitigation)] }),
+        ],
+      }))
+    ];
+
+    children.push(new Table({
+      rows: riskRows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+    }));
+    children.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+  }
+
+  // Notes
+  if (data.notes) {
+    children.push(new Paragraph({ text: "Notes", heading: HeadingLevel.HEADING_1 }));
+    children.push(new Paragraph({ text: data.notes }));
+  }
+
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: children,
+    }],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, `${data.title.replace(/\s+/g, '-').toLowerCase()}.docx`);
+}
+
+/**
  * Download file helper
  */
 export function downloadFile(
@@ -277,34 +595,27 @@ export async function exportProject(
   switch (format.toLowerCase()) {
     case 'csv':
       content = generateCSV(filteredData);
-      mimeType = 'text/csv';
+      downloadFile(content, filename, 'text/csv');
       break;
     case 'json':
       content = generateJSON(filteredData);
-      mimeType = 'application/json';
+      downloadFile(content, filename, 'application/json');
       break;
     case 'markdown':
       content = generateMarkdown(filteredData);
-      mimeType = 'text/markdown';
+      downloadFile(content, filename, 'text/markdown');
       break;
     case 'docx':
-      // For DOCX, we'll just generate a markdown representation
-      // A full DOCX generator would require additional libraries
-      content = generateMarkdown(filteredData);
-      mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      await generateWord(filteredData);
       break;
     case 'pdf':
-      // For PDF, we'll generate a markdown representation
-      // A full PDF generator would require additional libraries like pdfkit
-      content = generateMarkdown(filteredData);
-      mimeType = 'application/pdf';
+      generatePDF(filteredData);
       break;
     default:
       throw new Error(`Unsupported format: ${format}`);
   }
-
-  downloadFile(content, filename, mimeType);
 }
+
 
 /**
  * Export analytics data

@@ -14,32 +14,42 @@ export async function runRiskAssessmentAgent(
     fallback: riskFallback,
     runAgent: async () => {
       const prompt = `
-You are a senior engineering lead.
+You are a senior engineering lead performing a formal risk assessment for a real-world software project.
 
-Rules:
-- Identify technical, timeline, and security risks.
-- Severity must be Low, Medium, or High.
-- Output ONLY valid JSON.
+Your task is to identify potential risks that could negatively impact the successful delivery, security, scalability, or maintainability of the project.
 
-Requirements:
-${JSON.stringify(requirements, null, 2)}
+// STRICT RULES:
+// - Identify AT LEAST 3 distinct risks.
+// - Risks MUST be concrete, realistic, and engineering-focused.
+// - Cover key categories (Technical, Delivery, Security).
+// - Output ONLY valid JSON.
+//
+// PROJECT CONTEXT:
+// Requirements:
+// ${JSON.stringify(requirements, null, 2)}
+//
+// Tech Stack:
+// ${JSON.stringify(techStack, null, 2)}
+//
+// Execution Plan Summary (Modules):
+// ${JSON.stringify(taskPlan.modules?.map(m => m.module_name) || [], null, 2)}
 
-Tech Stack:
-${JSON.stringify(techStack, null, 2)}
+OUTPUT FORMAT (FOLLOW EXACTLY):
 
-Execution Plan:
-${JSON.stringify(taskPlan, null, 2)}
-
-Output JSON:
 {
   "risks": [
     {
-      "risk": "",
-      "severity": "",
-      "mitigation": ""
+      "risk": "Clear description of a specific risk",
+      "severity": "Low | Medium | High",
+      "mitigation": "Concrete steps to reduce or eliminate the risk"
     }
   ]
 }
+
+QUALITY BAR:
+- Imagine this risk assessment will be reviewed by a CTO.
+- If a risk is severe, the mitigation must be equally strong.
+- Avoid assumptions not supported by the provided context.
 `;
 
       const raw = await callGemini(prompt);

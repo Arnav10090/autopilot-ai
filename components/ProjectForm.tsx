@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input, TextArea } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Card, CardHeader, CardBody, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { analyzeProject } from '@/services/api';
@@ -20,8 +21,231 @@ const STEPS: { id: Step; label: string; icon: string }[] = [
   { id: 'review', label: 'Review', icon: '✓' },
 ];
 
+const TEMPLATE_PRESETS: Record<string, Partial<CreateProjectPayload>> = {
+  // Web Category
+  '1': {
+    project_description: 'Build a full-stack web application with a responsive dashboard, user authentication, and database integration.',
+    team_size: 4,
+    deadline: '3 months',
+    skill_level: 'Intermediate',
+    constraints: 'Must be SEO friendly and performance optimized.',
+  },
+  '101': {
+    project_description: 'Develop a full-featured online store with shopping cart, checkout process, and inventory management system.',
+    team_size: 4,
+    deadline: '4 months',
+    skill_level: 'Intermediate',
+    constraints: 'Secure payment processing and PCI compliance required.',
+  },
+  '102': {
+    project_description: 'Create an admin dashboard with analytics charts, user management, and subscription billing integration.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Intermediate',
+    constraints: 'Must use modern charting libraries and responsive design.',
+  },
+  '103': {
+    project_description: 'Build a personal portfolio website with blog functionality and a project showcase gallery.',
+    team_size: 1,
+    deadline: '2 weeks',
+    skill_level: 'Beginner',
+    constraints: 'Mobile responsive design and fast loading speeds.',
+  },
+  '104': {
+    project_description: 'Develop a community platform with user profiles, activity feeds, and real-time messaging.',
+    team_size: 5,
+    deadline: '6 months',
+    skill_level: 'Advanced',
+    constraints: 'Scalable database architecture for high concurrency.',
+  },
+  '105': {
+    project_description: 'Design a high-conversion landing page optimized for marketing campaigns with A/B testing support.',
+    team_size: 2,
+    deadline: '1 month',
+    skill_level: 'Beginner',
+    constraints: 'Integration with marketing tools and analytics.',
+  },
+
+  // Mobile Category
+  '2': {
+    project_description: 'Develop a cross-platform mobile application for iOS and Android using React Native.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Advanced',
+    constraints: 'Offline first architecture required.',
+  },
+  '201': {
+    project_description: 'Build a fitness tracking application with GPS integration, health metrics, and progress charts.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Intermediate',
+    constraints: 'Battery efficient GPS usage and background sync.',
+  },
+  '202': {
+    project_description: 'Create an on-demand food delivery app with real-time driver tracking and in-app payments.',
+    team_size: 4,
+    deadline: '4 months',
+    skill_level: 'Advanced',
+    constraints: 'Real-time location updates and push notifications.',
+  },
+  '203': {
+    project_description: 'Develop a real-time messaging app supporting text, voice, and video calls with end-to-end encryption.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Advanced',
+    constraints: 'Low latency messaging and secure media handling.',
+  },
+  '204': {
+    project_description: 'Build a travel companion app with interactive maps, itinerary planning, and local guide recommendations.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Intermediate',
+    constraints: 'Offline map access and location services.',
+  },
+  '205': {
+    project_description: 'Create an education platform mobile app with course content, quizzes, and progress tracking.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Intermediate',
+    constraints: 'Video streaming optimization and offline content support.',
+  },
+
+  // Backend Category
+  '3': {
+    project_description: 'Design and implement a scalable RESTful API service with microservices architecture.',
+    team_size: 2,
+    deadline: '2 months',
+    skill_level: 'Advanced',
+    constraints: 'High availability and rate limiting required.',
+  },
+  '301': {
+    project_description: 'Implement a secure authentication service with OAuth provider support, JWT, and role-based access control.',
+    team_size: 2,
+    deadline: '2 months',
+    skill_level: 'Advanced',
+    constraints: 'Strict security standards and token management.',
+  },
+  '302': {
+    project_description: 'Develop a payment gateway integration service tackling subscription management and recurring billing.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Expert',
+    constraints: 'PCI DSS compliance and robust error handling.',
+  },
+  '303': {
+    project_description: 'Build a headless CMS to manage and deliver structured content via API to multiple platforms.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Intermediate',
+    constraints: 'Flexible schema definition and GraphQL API.',
+  },
+  '304': {
+    project_description: 'Create a dedicated WebSocket server for handling real-time updates and instant notifications.',
+    team_size: 2,
+    deadline: '2 months',
+    skill_level: 'Advanced',
+    constraints: 'Scalable for high concurrent connections.',
+  },
+  '305': {
+    project_description: 'Implement a dedicated search engine service with indexing, relevance ranking, and fuzzy search capabilities.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Expert',
+    constraints: 'Fast response times and efficient indexing.',
+  },
+
+  // Data Category
+  '4': {
+    project_description: 'Construct a data pipeline for ETL processing and real-time analytics.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Expert',
+    constraints: 'Must handle high throughput data ingestion.',
+  },
+  '401': {
+    project_description: 'Setup a data warehouse solution with automated data extraction and generation of reporting dashboards.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Advanced',
+    constraints: 'Data integrity checks and scheduled reporting.',
+  },
+  '402': {
+    project_description: 'Build a centralized log aggregation system to collect, store, and analyze application logs.',
+    team_size: 2,
+    deadline: '2 months',
+    skill_level: 'Intermediate',
+    constraints: 'Efficient storage and searchable logs.',
+  },
+  '403': {
+    project_description: 'Develop a recommendation engine using collaborative filtering to provide personalized suggestions.',
+    team_size: 4,
+    deadline: '5 months',
+    skill_level: 'Expert',
+    constraints: 'Scalable algorithms and A/B testing support.',
+  },
+  '404': {
+    project_description: 'Create an ingestion system for high-frequency IoT sensor data streams.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Advanced',
+    constraints: 'Time-series database and real-time processing.',
+  },
+  '405': {
+    project_description: 'Build an automated web scraping tool for data extraction and monitoring.',
+    team_size: 2,
+    deadline: '2 months',
+    skill_level: 'Intermediate',
+    constraints: 'Proxy management and anti-bot handling.',
+  },
+
+  // AI Category
+  '5': {
+    project_description: 'Develop and deploy a machine learning model for predictive analysis.',
+    team_size: 4,
+    deadline: '5 months',
+    skill_level: 'Expert',
+    constraints: 'Requires GPU acceleration for training.',
+  },
+  '501': {
+    project_description: 'Create a conversational AI chatbot assistant powered by LLMs for customer support.',
+    team_size: 3,
+    deadline: '3 months',
+    skill_level: 'Advanced',
+    constraints: 'Natural language understanding and context awareness.',
+  },
+  '502': {
+    project_description: 'Develop a computer vision system for object detection and image classification tasks.',
+    team_size: 4,
+    deadline: '5 months',
+    skill_level: 'Expert',
+    constraints: 'High accuracy models and real-time inference.',
+  },
+  '503': {
+    project_description: 'Build an NLP processing pipeline for sentiment analysis and text summarization.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Expert',
+    constraints: 'Support for multiple languages and large text corpora.',
+  },
+  '504': {
+    project_description: 'Implement a predictive modeling engine for sales forecasting and trend analysis.',
+    team_size: 4,
+    deadline: '5 months',
+    skill_level: 'Expert',
+    constraints: 'Statistical accuracy and data visualization.',
+  },
+  '505': {
+    project_description: 'Integrate voice technologies to create a voice assistant with speech-to-text and text-to-speech.',
+    team_size: 3,
+    deadline: '4 months',
+    skill_level: 'Advanced',
+    constraints: 'Low latency voice processing.',
+  },
+};
+
 export default function ProjectForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState<Step>('info');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -36,9 +260,32 @@ export default function ProjectForm() {
     constraints: '',
   });
 
-  // Auto-save to localStorage
+  const [selectedQuality, setSelectedQuality] = useState('quick');
+
+  // Load template if present
   useEffect(() => {
-    localStorage.setItem('project_draft', JSON.stringify(form));
+    const templateId = searchParams.get('template');
+    if (templateId && TEMPLATE_PRESETS[templateId]) {
+      setForm(prev => ({
+        ...prev,
+        ...TEMPLATE_PRESETS[templateId]
+      }));
+    } else {
+      // Auto-save/load logic only if no template
+      const saved = localStorage.getItem('project_draft');
+      if (saved) {
+        try {
+          setForm(JSON.parse(saved));
+        } catch (e) {}
+      }
+    }
+  }, [searchParams]);
+
+  // Auto-save to localStorage (only if changed by user)
+  useEffect(() => {
+    if (form.project_description) {
+      localStorage.setItem('project_draft', JSON.stringify(form));
+    }
   }, [form]);
 
   const handleInputChange = (
@@ -61,9 +308,12 @@ export default function ProjectForm() {
     }
   };
 
+  const [apiResult, setApiResult] = useState<{ project_id: string } | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setApiResult(null);
 
     if (!form.project_description.trim()) {
       setError('Project description is required');
@@ -72,24 +322,36 @@ export default function ProjectForm() {
 
     try {
       setIsAnalyzing(true);
-      setAnalysisStep(0);
 
-      setAnalysisStep(1);
-      const result = await analyzeProject(form);
+      // Get user_id from localStorage session
+      const storedUser = localStorage.getItem('user');
+      const userId = storedUser ? JSON.parse(storedUser).id : undefined;
 
-      setAnalysisStep(4);
+      const result = await analyzeProject({
+        ...form,
+        quality: selectedQuality as 'quick' | 'balanced' | 'complete'
+      }, userId);
+
       if (result && result.project_id) {
         localStorage.removeItem('project_draft');
-        router.push(`/project/${result.project_id}`);
+        setApiResult(result);
+        // Don't redirect here - let the animation complete first
       } else {
         setError('Failed to create project. No project ID returned.');
+        setIsAnalyzing(false);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message || 'Something went wrong. Please try again.');
-    } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleAnimationComplete = () => {
+    if (apiResult?.project_id) {
+      router.push(`/project/${apiResult.project_id}`);
+    }
+    setIsAnalyzing(false);
   };
 
   const isStepValid = (step: Step) => {
@@ -113,12 +375,17 @@ export default function ProjectForm() {
   const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-4xl mx-auto">
-      {isAnalyzing && <AgentProgress currentStep={analysisStep} />}
+    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
+      {isAnalyzing && (
+        <AgentProgress 
+          isDataReady={!!apiResult} 
+          onAnimationComplete={handleAnimationComplete} 
+        />
+      )}
 
       <div className="mb-8">
         <h1 className="text-4xl font-display font-700 text-neutral-900 dark:text-neutral-50 mb-2">
-          Create Project Plan
+          <span className="gradient-text">Create Project Plan</span>
         </h1>
         <p className="text-neutral-600 dark:text-neutral-400">
           Let our AI agents analyze your project and create a comprehensive plan
@@ -157,7 +424,7 @@ export default function ProjectForm() {
                 }}
                 className={`p-3 rounded-lg text-center font-medium transition-all text-sm ${
                   step.id === currentStep
-                    ? 'bg-accent text-white shadow-md'
+                    ? 'bg-neutral-900 dark:bg-accent text-white shadow-md'
                     : isStepValid(step.id)
                     ? 'bg-success/10 text-success dark:bg-success/20 hover:bg-success/20'
                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
@@ -220,22 +487,18 @@ export default function ProjectForm() {
                 disabled={isAnalyzing}
               />
 
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Team Skill Level
-                </label>
-                <select
+                <Select
+                  label="Team Skill Level"
                   name="skill_level"
                   value={form.skill_level}
                   onChange={handleInputChange}
+                  options={[
+                    { value: 'Beginner', label: 'Beginner' },
+                    { value: 'Intermediate', label: 'Intermediate' },
+                    { value: 'Advanced', label: 'Advanced' },
+                  ]}
                   disabled={isAnalyzing}
-                  className="w-full px-4 py-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-                >
-                  <option>Beginner</option>
-                  <option>Intermediate</option>
-                  <option>Advanced</option>
-                </select>
-              </div>
+                />
             </CardBody>
           </Card>
         )}
@@ -299,14 +562,15 @@ export default function ProjectForm() {
             />
             <CardBody className="space-y-4">
               <div className="space-y-3">
-                <div className="p-4 border-2 border-accent rounded-lg bg-accent/5">
+                <div className={`p-4 border-2 rounded-lg transition-all cursor-pointer ${selectedQuality === 'quick' ? 'border-white bg-white/5' : 'border-neutral-700 hover:border-neutral-500'}`} onClick={() => setSelectedQuality('quick')}>
                   <div className="flex items-start gap-3">
                     <input
                       type="radio"
                       id="quick"
                       name="quality"
                       value="quick"
-                      defaultChecked
+                      checked={selectedQuality === 'quick'}
+                      onChange={() => setSelectedQuality('quick')}
                       className="mt-1 w-4 h-4 accent-accent cursor-pointer"
                     />
                     <label htmlFor="quick" className="flex-1 cursor-pointer">
@@ -318,13 +582,15 @@ export default function ProjectForm() {
                   </div>
                 </div>
 
-                <div className="p-4 border-2 border-neutral-200 dark:border-neutral-700 rounded-lg">
+                <div className={`p-4 border-2 rounded-lg transition-all cursor-pointer ${selectedQuality === 'balanced' ? 'border-white bg-white/5' : 'border-neutral-700 hover:border-neutral-500'}`} onClick={() => setSelectedQuality('balanced')}>
                   <div className="flex items-start gap-3">
                     <input
                       type="radio"
                       id="balanced"
                       name="quality"
                       value="balanced"
+                      checked={selectedQuality === 'balanced'}
+                      onChange={() => setSelectedQuality('balanced')}
                       className="mt-1 w-4 h-4 accent-accent cursor-pointer"
                     />
                     <label htmlFor="balanced" className="flex-1 cursor-pointer">
@@ -336,13 +602,15 @@ export default function ProjectForm() {
                   </div>
                 </div>
 
-                <div className="p-4 border-2 border-neutral-200 dark:border-neutral-700 rounded-lg">
+                <div className={`p-4 border-2 rounded-lg transition-all cursor-pointer ${selectedQuality === 'complete' ? 'border-white bg-white/5' : 'border-neutral-700 hover:border-neutral-500'}`} onClick={() => setSelectedQuality('complete')}>
                   <div className="flex items-start gap-3">
                     <input
                       type="radio"
                       id="complete"
                       name="quality"
                       value="complete"
+                      checked={selectedQuality === 'complete'}
+                      onChange={() => setSelectedQuality('complete')}
                       className="mt-1 w-4 h-4 accent-accent cursor-pointer"
                     />
                     <label htmlFor="complete" className="flex-1 cursor-pointer">
@@ -442,7 +710,7 @@ export default function ProjectForm() {
                   onClick={handleNext}
                   disabled={!isStepValid(currentStep) || isAnalyzing}
                 >
-                  Next →
+                  {currentStep === 'quality' ? 'Generate Plan' : 'Next →'}
                 </Button>
               )}
             </div>
