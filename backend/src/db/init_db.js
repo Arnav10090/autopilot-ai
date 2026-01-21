@@ -10,6 +10,7 @@ async function initDb() {
     // WARNING: This deletes all data. In production, we would migrate.
     await client.query(`DROP TABLE IF EXISTS project_outputs CASCADE;`);
     await client.query(`DROP TABLE IF EXISTS projects CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS oauth_accounts CASCADE;`);
     await client.query(`DROP TABLE IF EXISTS users CASCADE;`);
 
     // Create users table
@@ -21,11 +22,20 @@ async function initDb() {
         password_hash VARCHAR(255),
         phone VARCHAR(50),
         dob DATE,
-        oauth_provider VARCHAR(50),
-        oauth_id VARCHAR(255),
         account_status VARCHAR(20) DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create oauth_accounts table to support multiple OAuth providers per user
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS oauth_accounts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        provider VARCHAR(50) NOT NULL,
+        provider_user_id VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(oauth_provider, oauth_id)
+        UNIQUE(provider, provider_user_id)
       );
     `);
 

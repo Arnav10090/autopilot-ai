@@ -56,19 +56,61 @@ export async function deactivateUser(id) {
 export async function createOAuthUser(userData) {
   const { name, email, oauth_provider, oauth_id } = userData;
   
-  const { rows } = await pool.query(
-    `INSERT INTO users (name, email, oauth_provider, oauth_id, account_status)
-     VALUES ($1, $2, $3, $4, 'Active')
-     RETURNING id, name, email, oauth_provider, created_at`,
-    [name, email, oauth_provider, oauth_id]
+  // First check if a user with this email already exists
+  if (email) {
+    const { rows: existingUsers } = await pool.query(
+      `SELECT * FROM users WHERE email = $1`,
+      [email]
+    );
+    
+    if (existingUsers.length > 0) {
+      // User exists with this email - link the OAuth provider to existing account
+      const existingUser = existingUsers[0];
+      
+      // Check if this OAuth provider is already linked
+      const { rows: existingOAuth } = await pool.query(
+        `SELECT * FROM oauth_accounts WHERE user_id = $1 AND provider = $2`,
+        [existingUser.id, oauth_provider]
+      );
+      
+      if (existingOAuth.length === 0) {
+        // Link the new OAuth provider to the existing user
+        await pool.query(
+          `INSERT INTO oauth_accounts (user_id, provider, provider_user_id)
+           VALUES ($1, $2, $3)`,
+          [existingUser.id, oauth_provider, oauth_id]
+        );
+      }
+      
+      return existingUser;
+    }
+  }
+  
+  // No existing user with this email - create new user and OAuth account
+  const { rows: userRows } = await pool.query(
+    `INSERT INTO users (name, email, account_status)
+     VALUES ($1, $2, 'Active')
+     RETURNING id, name, email, created_at`,
+    [name, email]
+  );
+  
+  const newUser = userRows[0];
+  
+  // Create OAuth account entry
+  await pool.query(
+    `INSERT INTO oauth_accounts (user_id, provider, provider_user_id)
+     VALUES ($1, $2, $3)`,
+    [newUser.id, oauth_provider, oauth_id]
   );
 
-  return rows[0];
+  return newUser;
 }
 
 export async function getUserByOAuthId(provider, oauthId) {
   const { rows } = await pool.query(
-    `SELECT * FROM users WHERE oauth_provider = $1 AND oauth_id = $2`,
+    `SELECT u.* FROM users u
+     JOIN oauth_accounts oa ON u.id = oa.user_id
+     WHERE oa.provider = $1 AND oa.provider_user_id = $2`,
     [provider, oauthId]
   );
   return rows[0];
