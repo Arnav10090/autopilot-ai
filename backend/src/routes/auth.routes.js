@@ -155,4 +155,74 @@ router.delete("/account/:id", async (req, res) => {
   }
 });
 
+// ============== OAuth Routes ==============
+
+// Google OAuth - Initiate authentication
+router.get('/google',
+  (req, res, next) => {
+    // Import passport here to avoid circular dependency
+    import('../config/passport.js').then(module => {
+      const passport = module.default;
+      passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+    });
+  }
+);
+
+// Google OAuth - Callback
+router.get('/google/callback',
+  async (req, res, next) => {
+    const passport = (await import('../config/passport.js')).default;
+    passport.authenticate('google', { 
+      failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/signin?error=google_auth_failed`,
+      session: false 
+    })(req, res, next);
+  },
+  (req, res) => {
+    // Successful authentication
+    const user = req.user;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    
+    // Redirect to frontend with user data in URL params (for demo purposes)
+    // In production, use secure tokens/sessions
+    res.redirect(`${frontendUrl}/auth/callback?user=${encodeURIComponent(JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email
+    }))}`);
+  }
+);
+
+// GitHub OAuth - Initiate authentication
+router.get('/github',
+  (req, res, next) => {
+    import('../config/passport.js').then(module => {
+      const passport = module.default;
+      passport.authenticate('github', { scope: ['user:email'] })(req, res, next);
+    });
+  }
+);
+
+// GitHub OAuth - Callback
+router.get('/github/callback',
+  async (req, res, next) => {
+    const passport = (await import('../config/passport.js')).default;
+    passport.authenticate('github', { 
+      failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/signin?error=github_auth_failed`,
+      session: false 
+    })(req, res, next);
+  },
+  (req, res) => {
+    // Successful authentication
+    const user = req.user;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    
+    // Redirect to frontend with user data in URL params
+    res.redirect(`${frontendUrl}/auth/callback?user=${encodeURIComponent(JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email
+    }))}`);
+  }
+);
+
 export default router;

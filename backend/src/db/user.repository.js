@@ -51,3 +51,25 @@ export async function deactivateUser(id) {
   );
   return rows[0];
 }
+
+// OAuth user functions
+export async function createOAuthUser(userData) {
+  const { name, email, oauth_provider, oauth_id } = userData;
+  
+  const { rows } = await pool.query(
+    `INSERT INTO users (name, email, oauth_provider, oauth_id, account_status)
+     VALUES ($1, $2, $3, $4, 'Active')
+     RETURNING id, name, email, oauth_provider, created_at`,
+    [name, email, oauth_provider, oauth_id]
+  );
+
+  return rows[0];
+}
+
+export async function getUserByOAuthId(provider, oauthId) {
+  const { rows } = await pool.query(
+    `SELECT * FROM users WHERE oauth_provider = $1 AND oauth_id = $2`,
+    [provider, oauthId]
+  );
+  return rows[0];
+}
