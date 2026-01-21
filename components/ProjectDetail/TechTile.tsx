@@ -13,6 +13,7 @@ interface TechTileProps {
 
 export function TechTile({ category, choice, reason, confidence, icon }: TechTileProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 4.5) return 'success';
@@ -32,6 +33,13 @@ export function TechTile({ category, choice, reason, confidence, icon }: TechTil
     return icon || icons[category.toLowerCase()] || icons.default;
   };
 
+  const handleCopy = () => {
+    const text = `${category}: ${choice}\nReason: ${reason}\nConfidence: ${confidence}/5`;
+    navigator.clipboard.writeText(text);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  };
+
   return (
     <div
       onMouseEnter={() => setIsHovered(true)}
@@ -46,7 +54,7 @@ export function TechTile({ category, choice, reason, confidence, icon }: TechTil
       <div className="space-y-4 relative z-10">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <Badge variant="default" size="sm">{category}</Badge>
             <h3 className="font-display font-700 text-xl text-neutral-900 dark:text-neutral-50 flex items-center gap-2">
               <span className="text-2xl">{getCategoryIcon(category)}</span>
@@ -54,13 +62,34 @@ export function TechTile({ category, choice, reason, confidence, icon }: TechTil
             </h3>
           </div>
           
-          {/* Glowing confidence indicator */}
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold ${
-            confidence >= 4 ? 'bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/20' :
-            confidence >= 3 ? 'bg-cyan-500/20 text-cyan-400 shadow-lg shadow-cyan-500/20' :
-            'bg-amber-500/20 text-amber-400 shadow-lg shadow-amber-500/20'
-          }`}>
-            {confidence.toFixed(1)}
+          <div className="flex items-center gap-3">
+            {/* Copy button */}
+            <div className="relative">
+              {showCopied && (
+                <div className="absolute -top-14 right-0 bg-accent text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap z-50 flex items-center gap-2 animate-fade-in-up">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Copied!</span>
+                </div>
+              )}
+              <button
+                onClick={handleCopy}
+                className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+                title="Copy tech stack recommendation"
+              >
+                📋
+              </button>
+            </div>
+
+            {/* Glowing confidence indicator */}
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold ${
+              confidence >= 4 ? 'bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/20' :
+              confidence >= 3 ? 'bg-cyan-500/20 text-cyan-400 shadow-lg shadow-cyan-500/20' :
+              'bg-amber-500/20 text-amber-400 shadow-lg shadow-amber-500/20'
+            }`}>
+              {confidence.toFixed(1)}
+            </div>
           </div>
         </div>
 

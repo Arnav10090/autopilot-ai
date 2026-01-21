@@ -44,6 +44,18 @@ export async function updateUserPassword(id, newPassword) {
   return rows[0];
 }
 
+export async function updateUserProfile(id, profileData) {
+  const { name, email, phone, dob } = profileData;
+  const { rows } = await pool.query(
+    `UPDATE users 
+     SET name = $1, email = $2, phone = $3, dob = $4 
+     WHERE id = $5 
+     RETURNING id, name, email, phone, dob, created_at`,
+    [name, email, phone, dob, id]
+  );
+  return rows[0];
+}
+
 export async function deactivateUser(id) {
   const { rows } = await pool.query(
     `UPDATE users SET account_status = 'Inactive' WHERE id = $1 RETURNING id`,

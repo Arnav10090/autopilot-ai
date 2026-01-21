@@ -70,7 +70,7 @@ export function ProjectHero({
 
         {/* Right actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Tooltip content="Regenerate analysis">
+          <Tooltip content="Regenerate analysis" position="bottom">
             <Button
               variant="outline"
               onClick={onRegenerateClick}
@@ -82,7 +82,7 @@ export function ProjectHero({
               Regenerate
             </Button>
           </Tooltip>
-          <Tooltip content="Export project">
+          <Tooltip content="Export project" position="bottom">
             <Button
               variant="outline"
               onClick={onExportClick}
@@ -94,7 +94,7 @@ export function ProjectHero({
               Export
             </Button>
           </Tooltip>
-          <Tooltip content="Share project">
+          <Tooltip content="Share project" position="bottom">
             <Button
               variant="outline"
               onClick={onShareClick}

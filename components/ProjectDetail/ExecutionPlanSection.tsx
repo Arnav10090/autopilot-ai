@@ -28,6 +28,7 @@ export function ExecutionPlanSection({ modules, onTaskReorder }: ExecutionPlanSe
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [draggedTask, setDraggedTask] = useState<{ moduleId: string; taskId: string } | null>(null);
   const [localModules, setLocalModules] = useState(modules);
+  const [showCopied, setShowCopied] = useState(false);
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedModules);
@@ -100,6 +101,22 @@ export function ExecutionPlanSection({ modules, onTaskReorder }: ExecutionPlanSe
   );
   const overallProgress = Math.round((completedDays / totalDays) * 100);
 
+  const handleCopyAll = () => {
+    const text = localModules
+      .map((module, moduleIndex) => {
+        const tasksText = module.tasks
+          .map((task, taskIndex) => `   ${taskIndex + 1}. ${task.name} (${task.estimateDays} days)`)
+          .join('\n');
+        return `${moduleIndex + 1}. ${module.name}\n${tasksText}`;
+      })
+      .join('\n\n');
+    const fullText = `Execution Plan\n${'='.repeat(14)}\n\n${text}`;
+    navigator.clipboard.writeText(fullText);
+    
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  };
+
   const TaskItem = ({ moduleId, task }: { moduleId: string; task: Task }) => (
     <div
       draggable
@@ -151,28 +168,69 @@ export function ExecutionPlanSection({ modules, onTaskReorder }: ExecutionPlanSe
 
   const ModuleItem = ({ module }: { module: Module }) => {
     const isExpanded = expandedModules.has(module.id);
+    const [showCopied, setShowCopied] = useState(false);
+
+    const handleCopyModule = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent toggle when clicking copy button
+      const tasksText = module.tasks
+        .map((task, idx) => `   ${idx + 1}. ${task.name} (${task.estimateDays} days)`)
+        .join('\n');
+      const text = `${module.name}\n${'='.repeat(module.name.length)}\n\n${tasksText}`;
+      navigator.clipboard.writeText(text);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    };
 
     return (
       <div key={module.id} className="border-2 border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
-        <button
-          onClick={() => toggleExpanded(module.id)}
-          className="w-full text-left p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent bg-gradient-to-r from-accent/5 via-transparent to-accent-2/5"
-          aria-expanded={isExpanded}
-        >
+        <div className="p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors bg-gradient-to-r from-accent/5 via-transparent to-accent-2/5">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 space-y-2">
-              <h3 className="font-display font-700 text-neutral-900 dark:text-neutral-50">
-                {module.name}
-              </h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                {module.tasks.length} tasks • {module.estimateDays} days
-              </p>
+            <button
+              onClick={() => toggleExpanded(module.id)}
+              className="flex-1 text-left focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
+              aria-expanded={isExpanded}
+            >
+              <div className="space-y-2">
+                <h3 className="font-display font-700 text-neutral-900 dark:text-neutral-50">
+                  {module.name}
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  {module.tasks.length} tasks • {module.estimateDays} days
+                </p>
+              </div>
+            </button>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Copy button */}
+              <div className="relative">
+                {showCopied && (
+                  <div className="absolute -top-14 right-0 bg-accent text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap z-50 flex items-center gap-2 animate-fade-in-up">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Copied!</span>
+                  </div>
+                )}
+                <button
+                  onClick={handleCopyModule}
+                  className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+                  title="Copy module"
+                >
+                  📋
+                </button>
+              </div>
+              {/* Expand/collapse arrow */}
+              <button
+                onClick={() => toggleExpanded(module.id)}
+                className="text-xl transition-transform focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
+                aria-label={isExpanded ? 'Collapse module' : 'Expand module'}
+              >
+                <span className={`transition-transform inline-block ${isExpanded ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+              </button>
             </div>
-            <span className={`text-xl transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-              ▼
-            </span>
           </div>
-        </button>
+        </div>
 
         {isExpanded && (
           <div className="border-t-2 border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 animate-slide-down">
@@ -198,10 +256,31 @@ export function ExecutionPlanSection({ modules, onTaskReorder }: ExecutionPlanSe
 
   return (
     <div className="space-y-6 mb-8">
-      <div>
+      <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl font-display font-700 text-neutral-900 dark:text-neutral-50 mb-4">
           Execution Plan
         </h2>
+        {localModules.length > 0 && (
+          <div className="relative flex-shrink-0">
+            {/* Copied notification */}
+            {showCopied && (
+              <div className="absolute -top-14 right-0 bg-accent text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap z-50 flex items-center gap-2 animate-fade-in-up">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Copied!</span>
+              </div>
+            )}
+            <button
+              onClick={handleCopyAll}
+              className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+              title="Copy execution plan"
+            >
+              📋
+            </button>
+          </div>
+        )}
+      </div>
 
         {/* Overall progress */}
         <Card className="mb-6">
@@ -231,7 +310,6 @@ export function ExecutionPlanSection({ modules, onTaskReorder }: ExecutionPlanSe
             </div>
           </CardBody>
         </Card>
-      </div>
 
       {localModules.length > 0 ? (
         <div className="space-y-3">

@@ -7,17 +7,78 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Toggle } from '@/components/ui/Toggle';
 import { Select } from '@/components/ui/Select';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function SettingsPage() {
-  const [apiKey, setApiKey] = useState('sk_test_••••••••••••••••');
-  const [showKey, setShowKey] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [user, setUser] = useState<any>({ name: '', email: '' });
+  const [user, setUser] = useState<any>({ name: '', email: '', phone: '', dob: '' });
+  const [originalUser, setOriginalUser] = useState<any>({ name: '', email: '', phone: '', dob: '' });
   const [newPassword, setNewPassword] = useState('');
   const [passwordStatus, setPasswordStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const { language, setLanguage, t } = useLanguage();
+  
+  // Confirmation dialog states
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get changed fields
+  const getChangedFields = () => {
+    const changes: { field: string; oldValue: string; newValue: string }[] = [];
+    
+    if (user.name !== originalUser.name) {
+      changes.push({ field: 'Name', oldValue: originalUser.name, newValue: user.name });
+    }
+    if (user.email !== originalUser.email) {
+      changes.push({ field: 'Email', oldValue: originalUser.email, newValue: user.email });
+    }
+    if (user.phone !== originalUser.phone) {
+      changes.push({ field: 'Phone', oldValue: originalUser.phone || 'Not set', newValue: user.phone });
+    }
+    if (user.dob !== originalUser.dob) {
+      changes.push({ field: 'Date of Birth', oldValue: originalUser.dob || 'Not set', newValue: user.dob });
+    }
+    
+    return changes;
+  };
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          dob: user.dob
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+      
+      // Update original user to reflect saved state
+      setOriginalUser({ ...user });
+      
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      setShowSaveDialog(false);
+      setIsSaving(false);
+      
+      // Show success message (you could add a toast/notification here)
+      alert('Profile updated successfully!');
+    } catch (err: any) {
+      console.error('Save failed:', err);
+      setIsSaving(false);
+      alert('Failed to save changes: ' + err.message);
+    }
+  };
 
   const handlePasswordChange = async () => {
     if (!newPassword.trim()) return;
@@ -49,9 +110,7 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm('Are you sure you want to delete your account? This action cannot be undone.');
-    if (!confirmed) return;
-
+    setIsDeleting(true);
     try {
       const res = await fetch(`http://localhost:5000/api/auth/account/${user.id}`, {
         method: 'DELETE',
@@ -65,6 +124,8 @@ export default function SettingsPage() {
       window.location.href = '/auth/signin';
     } catch (err: any) {
       console.error('Account deletion failed:', err);
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
       alert('Failed to delete account: ' + err.message);
     }
   };
@@ -77,6 +138,7 @@ export default function SettingsPage() {
       if (!parsed.id) {
           console.error("User ID missing in session:", parsed);
           setUser(parsed);
+          setOriginalUser(parsed);
           return;
       }
 
@@ -86,21 +148,21 @@ export default function SettingsPage() {
         .then(data => {
             if (data.error) {
                 console.error(data.error);
-                setUser(parsed); // Fallback
+                setUser(parsed);
+                setOriginalUser(parsed);
             } else {
-                setUser({
+                const userData = {
                     ...data,
-                    // Use hashed password as placeholder for "Current Password" field if desired, 
-                    // or better, just keep it hidden/empty.
-                    // But user specifically asked for "Password (hide/unhide)".
-                    // The API returns password_hash now for this purpose.
                     password: data.password_hash 
-                });
+                };
+                setUser(userData);
+                setOriginalUser(userData);
             }
         })
         .catch(err => {
             console.error("Failed to load profile", err);
             setUser(parsed);
+            setOriginalUser(parsed);
         });
     }
   }, []);
@@ -171,13 +233,58 @@ export default function SettingsPage() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <Input label={t('dateOfBirth')} type="date" value={user.dob ? new Date(user.dob).toISOString().split('T')[0] : ''} onChange={(e) => setUser({...user, dob: e.target.value})} />
+                 <Input 
+                   label={t('dateOfBirth')} 
+                   type="date" 
+                   value={user.dob ? new Date(user.dob).toISOString().split('T')[0] : ''} 
+                   onChange={(e) => setUser({...user, dob: e.target.value})} 
+                 />
+                 <Input 
+                   label="Phone Number" 
+                   type="tel" 
+                   placeholder="+1 (555) 000-0000" 
+                   value={user.phone || ''} 
+                   onChange={(e) => {
+                     // Only allow numbers and limit to 10 digits
+                     const numericValue = e.target.value.replace(/\D/g, '').slice(0, 10);
+                     setUser({...user, phone: numericValue});
+                   }} 
+                 />
               </div>
 
               <div className="border-t border-neutral-200 dark:border-neutral-800 my-4 pt-4">
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-4">{t('security')}</h3>
                 
-                <div className="space-y-4">
+                {user.isOAuthUser ? (
+                  // OAuth User - Show provider info
+                  <div className="bg-accent/10 border border-accent/30 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-neutral-900 dark:text-neutral-50 mb-1">
+                          OAuth Authentication
+                        </p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                          You signed in with {user.oauthProviders?.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(' and ')}. Your password is managed by your OAuth provider.
+                        </p>
+                        {user.oauthProviders && user.oauthProviders.length > 0 && (
+                          <div className="flex gap-2">
+                            {user.oauthProviders.map((provider: string) => (
+                              <div key={provider} className="px-3 py-1.5 bg-surface dark:bg-surface-dark rounded-lg border border-neutral-200 dark:border-neutral-700 text-sm font-medium capitalize">
+                                {provider}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       {t('currentPassword')}
@@ -226,54 +333,23 @@ export default function SettingsPage() {
                       <p className="text-sm text-danger">✗ Failed to update password</p>
                     )}
                   </div>
-                </div>
+                  </div>
+                )}
               </div>
             </CardBody>
             <CardFooter>
-              <Button>{t('saveChanges')}</Button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        {/* API Keys */}
-        <div className="space-y-4">
-          <div id="api-keys" className="scroll-mt-24">
-            <h2 className="text-2xl font-display font-700 text-neutral-900 dark:text-neutral-50 mb-2">
-              API Keys
-            </h2>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Manage your API credentials for integrations
-            </p>
-          </div>
-
-          <Card className="relative z-30">
-            <CardBody className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  API Key
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type={showKey ? 'text' : 'password'}
-                    value={apiKey}
-                    readOnly
-                    className="flex-1 px-4 py-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-50 font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowKey(!showKey)}
-                  >
-                    {showKey ? '🙈 Hide' : '👁️ Show'}
-                  </Button>
-                  <Button variant="outline">📋 Copy</Button>
-                </div>
-              </div>
-            </CardBody>
-            <CardFooter>
-              <div className="space-x-3 flex">
-                <Button variant="outline">Rotate Key</Button>
-                <Button variant="danger">Revoke Key</Button>
-              </div>
+              <Button 
+                onClick={() => {
+                  const changes = getChangedFields();
+                  if (changes.length === 0) {
+                    alert('No changes to save');
+                    return;
+                  }
+                  setShowSaveDialog(true);
+                }}
+              >
+                {t('saveChanges')}
+              </Button>
             </CardFooter>
           </Card>
         </div>
@@ -336,7 +412,11 @@ export default function SettingsPage() {
 
           <Card className="border-danger/30 bg-danger/5 relative z-10">
             <CardBody className="space-y-4">
-              <Button variant="danger" className="w-full" onClick={handleDeleteAccount}>
+              <Button 
+                variant="danger" 
+                className="w-full" 
+                onClick={() => setShowDeleteDialog(true)}
+              >
                 {t('deleteAccount')}
               </Button>
               <p className="text-xs text-neutral-600 dark:text-neutral-400">
@@ -346,6 +426,54 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Save Changes Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        onConfirm={handleSaveChanges}
+        title="Confirm Changes"
+        message={
+          <div className="space-y-3">
+            <p>Do you really want to make changes to the following fields?</p>
+            <div className="bg-neutral-100 dark:bg-neutral-800 rounded-lg p-4 space-y-2">
+              {getChangedFields().map((change, idx) => (
+                <div key={idx} className="text-sm">
+                  <span className="font-medium text-neutral-900 dark:text-neutral-50">{change.field}:</span>
+                  <div className="ml-4 text-neutral-600 dark:text-neutral-400">
+                    <span className="line-through">{change.oldValue}</span> → <span className="text-accent font-medium">{change.newValue}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        }
+        confirmText="Save Changes"
+        cancelText="Cancel"
+        isLoading={isSaving}
+      />
+
+      {/* Delete Account Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteAccount}
+        title="Delete Account"
+        message={
+          <div className="space-y-3">
+            <p>Are you sure you want to delete your account?</p>
+            <div className="bg-danger/10 rounded-lg p-4">
+              <p className="text-sm text-danger font-medium">
+                ⚠️ This action cannot be undone. All your data will be permanently deleted.
+              </p>
+            </div>
+          </div>
+        }
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </main>
   );
 }

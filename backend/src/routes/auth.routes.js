@@ -75,7 +75,7 @@ router.post("/login", async (req, res) => {
 router.get("/profile/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`[PROFILE] Fetching profile for ID: ${id}`); // Debug log
+    console.log(`[PROFILE] Fetching profile for ID: ${id}`);
 
     // Integer validation for Serial ID
     if (!id || isNaN(id)) {
@@ -89,6 +89,16 @@ router.get("/profile/:id", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     
+    // Check if user has OAuth accounts
+    const { pool } = await import('../db/index.js');
+    const { rows: oauthAccounts } = await pool.query(
+      `SELECT provider FROM oauth_accounts WHERE user_id = $1`,
+      [id]
+    );
+    
+    const providers = oauthAccounts.map(account => account.provider);
+    const isOAuthUser = providers.length > 0;
+    
     // Return full details except password (or include hashed if needed for UI "current password" check demo)
     res.status(200).json({
       id: user.id,
@@ -96,6 +106,8 @@ router.get("/profile/:id", async (req, res) => {
       email: user.email,
       phone: user.phone,
       dob: user.dob,
+      isOAuthUser,
+      oauthProviders: providers,
       // For demo purposes only, sending back the "hash" so UI can populate "Current Password" field
       // In production, NEVER send password back.
       password_hash: user.password_hash 
@@ -103,6 +115,40 @@ router.get("/profile/:id", async (req, res) => {
   } catch (error) {
     console.error("Fetch profile error:", error);
     res.status(500).json({ error: "Failed to fetch profile" });
+  }
+});
+
+// PUT /api/auth/profile/:id
+router.put("/profile/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, dob } = req.body;
+    
+    console.log(`[PROFILE UPDATE] Updating profile for ID: ${id}`);
+    
+    // Integer validation for Serial ID
+    if (!id || isNaN(id)) {
+        console.error(`[PROFILE UPDATE] Invalid ID format: ${id}`);
+        return res.status(400).json({ error: "Invalid User ID" });
+    }
+
+    // Import updateUserProfile
+    const { updateUserProfile } = await import('../db/user.repository.js');
+    
+    const updatedUser = await updateUserProfile(id, { name, email, phone, dob });
+    
+    if (!updatedUser) {
+      console.warn(`[PROFILE UPDATE] User not found for ID: ${id}`);
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 });
 

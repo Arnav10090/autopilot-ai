@@ -628,6 +628,18 @@ code {
   }
 }
 
+.animate-fade-in-up {
+  animation: slide-up var(--duration-300) var(--easing-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ============================================================================
    PREMIUM DESIGN ENHANCEMENTS
    ============================================================================ */
@@ -953,4 +965,3 @@ code {
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
 }
-
