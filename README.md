@@ -38,47 +38,50 @@ Whether you're a startup founder, project manager, or development team lead, Aut
 - **Functional Requirements Extraction**: Automatically identify core features and capabilities
 - **Non-Functional Requirements**: Performance, security, scalability considerations
 - **Assumptions Tracking**: Document project assumptions and dependencies
-- **Missing Information Detection**: Highlight gaps that need clarification
+- **Smart Actions**: One-click copy for all requirements or individual items with instant feedback
 
 ### 🛠️ **Tech Stack Recommendations**
 - **AI-Powered Suggestions**: Get technology recommendations tailored to your project
 - **Confidence Ratings**: See how confident the AI is about each recommendation
-- **Category-Based Organization**: Frontend, backend, database, DevOps, and more
-- **Reasoning Transparency**: Understand why each technology was recommended
+- **Detailed Reasoning**: Transparent view of why each technology was chosen
+- **Quick Copy**: Easily copy recommendations and reasons to clipboard
 
 ### ⚠️ **Risk Assessment**
 - **Comprehensive Risk Analysis**: Identify technical, timeline, and resource risks
 - **Severity Indicators**: Visual classification (Low, Medium, High, Critical)
 - **Mitigation Strategies**: Actionable steps to reduce or eliminate risks
-- **Expandable Details**: Dive deep into each risk with full context
+- **Interactive Elements**: Expandable details and copy functionality for risk items
 
 ### 📋 **Execution Planning**
 - **Module-Based Task Breakdown**: Organized by feature modules
-- **Time Estimates**: Task-level duration predictions
+- **Smart Copy**: Copy entire modules with tasks or individual items
 - **Progress Tracking**: Visual progress indicators for each module
 - **Drag & Drop Reordering**: Easily prioritize tasks with keyboard support
 - **Dependency Visualization**: Understand task relationships
+
+### � **AI Chatbot Assistant**
+- **Context-Aware Help**: Ask questions about your generated project plan
+- **Instant Clarifications**: Get explanations for technical terms or requirements
+- **Modifiable Suggestions**: Request changes to specific project sections through chat
+- **Floating Interface**: Access the assistant from anywhere in the application
+
+### �🔐 **Security & Authentication**
+- **OAuth 2.0 Integration**: Sign in securely with Google or GitHub
+- **Account Linking**: Link multiple providers to a single account
+- **Profile Management**: Update personal details and manage passwords
+- **Danger Zone**: Secure account deletion with confirmation safeguards
+
+### 🌐 **Global Accessibility**
+- **Internationalization (i18n)**: Native support for English, Spanish, French, and German
+- **Global Search**: Instantly find projects, templates, and settings
+- **Theme System**: Intelligent Light/Dark/System modes with smooth transitions
+- **Responsive Design**: Centered layouts optimized for all viewport sizes
 
 ### 📊 **Analytics Dashboard**
 - **KPI Monitoring**: Track projects analyzed, average ratings, agent performance
 - **Cost Estimation**: Budget forecasting for project execution
 - **Date Range Filtering**: Analyze data by 24h, 7d, 30d, 90d periods
 - **Export Capabilities**: CSV, JSON, PDF export for reporting
-
-### 🎨 **Beautiful Design System**
-- **Glassmorphism UI**: Modern design with backdrop blur effects
-- **Dark Mode**: Full dark mode support with system preference detection
-- **Smooth Animations**: 15+ custom keyframe animations
-- **3D Accents**: Interactive floating elements with parallax effects
-- **Responsive Grid Layouts**: Adaptive layouts for all screen sizes
-
-### 🔐 **User Experience**
-- **Multi-Step Forms**: Progressive disclosure with validation
-- **Auto-Save Drafts**: Never lose your work
-- **Template Library**: 6+ pre-built project templates
-- **Search & Filters**: Find projects quickly with smart search
-- **Comments & Collaboration**: Threaded comments with @mentions
-- **File Attachments**: Upload and manage project documents
 
 ---
 
@@ -87,17 +90,19 @@ Whether you're a startup founder, project manager, or development team lead, Aut
 ### Frontend
 - **Framework**: [Next.js 16.1.1](https://nextjs.org/) with App Router
 - **UI Library**: [React 19.2.3](https://reactjs.org/)
+- **State Management**: Context API (Search, Auth, Theme, Language)
 - **Language**: [TypeScript 5](https://www.typescriptlang.org/)
 - **Styling**: [TailwindCSS 4](https://tailwindcss.com/)
 - **Fonts**: Google Fonts (Inter, Poppins, Fira Code)
 
 ### Backend
-- **Runtime**: Node.js
-- **AI Integration**: Google Generative AI
+- **Runtime**: Node.js & Express
+- **Authentication**: Passport.js (Google & GitHub OAuth)
+- **AI Integration**: Google Generative AI (Gemini)
 - **File Processing**: 
   - `jsPDF` - PDF generation
+  - `html2canvas` - QR & Element capture
   - `docx` - DOCX document creation
-  - `file-saver` - Client-side file downloads
 
 ### Development Tools
 - **Linting**: ESLint 9 with Next.js config
@@ -130,12 +135,19 @@ Whether you're a startup founder, project manager, or development team lead, Aut
    
    Create a `.env.local` file in the root directory:
    ```env
-   # Frontend (Optional - Add any API keys or configs)
+   # Frontend (Optional)
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    
-   # Backend (Navigate to /backend directory)
-   GOOGLE_API_KEY=your_google_ai_api_key_here
+   # Backend (Create .env in /backend)
    PORT=5000
+   GOOGLE_API_KEY=your_gemini_api_key
+   
+   # OAuth Configuration (Optional - for Auth)
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   GITHUB_CLIENT_ID=your_github_client_id
+   GITHUB_CLIENT_SECRET=your_github_client_secret
+   SESSION_SECRET=your_session_secret
    ```
 
 4. **Run the development server**
