@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface BadgeProps {
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'accent';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
   className?: string;
@@ -15,6 +15,7 @@ export function Badge({ variant = 'default', size = 'md', children, className = 
     warning: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     danger: 'bg-red-500/15 text-red-400 border-red-500/30',
     info: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+    accent: 'bg-accent/15 text-accent border-accent/30',
   };
 
   const sizeClasses = {

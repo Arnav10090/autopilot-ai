@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Card, CardBody, CardHeader, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Select';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-export default function SettingsPage() {
+function SettingsContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState<any>({ name: '', email: '', phone: '', dob: '' });
   const [originalUser, setOriginalUser] = useState<any>({ name: '', email: '', phone: '', dob: '' });
@@ -18,7 +18,7 @@ export default function SettingsPage() {
   const [passwordStatus, setPasswordStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const { language, setLanguage, t } = useLanguage();
-  
+
   // Confirmation dialog states
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -28,7 +28,7 @@ export default function SettingsPage() {
   // Get changed fields
   const getChangedFields = () => {
     const changes: { field: string; oldValue: string; newValue: string }[] = [];
-    
+
     if (user.name !== originalUser.name) {
       changes.push({ field: 'Name', oldValue: originalUser.name, newValue: user.name });
     }
@@ -41,7 +41,7 @@ export default function SettingsPage() {
     if (user.dob !== originalUser.dob) {
       changes.push({ field: 'Date of Birth', oldValue: originalUser.dob || 'Not set', newValue: user.dob });
     }
-    
+
     return changes;
   };
 
@@ -58,19 +58,19 @@ export default function SettingsPage() {
           dob: user.dob
         })
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update profile');
-      
+
       // Update original user to reflect saved state
       setOriginalUser({ ...user });
-      
+
       // Update localStorage
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       setShowSaveDialog(false);
       setIsSaving(false);
-      
+
       // Show success message (you could add a toast/notification here)
       alert('Profile updated successfully!');
     } catch (err: any) {
@@ -82,7 +82,7 @@ export default function SettingsPage() {
 
   const handlePasswordChange = async () => {
     if (!newPassword.trim()) return;
-    
+
     const confirmed = window.confirm('Do you really want to change your password?');
     if (!confirmed) return;
 
@@ -93,10 +93,10 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, new_password: newPassword })
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update password');
-      
+
       // Update local state to show new password
       setUser({ ...user, password: newPassword });
       setNewPassword('');
@@ -115,10 +115,10 @@ export default function SettingsPage() {
       const res = await fetch(`http://localhost:5000/api/auth/account/${user.id}`, {
         method: 'DELETE',
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete account');
-      
+
       // Clear session and redirect to signin
       localStorage.removeItem('user');
       window.location.href = '/auth/signin';
@@ -134,35 +134,35 @@ export default function SettingsPage() {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const parsed = JSON.parse(storedUser);
-      
+
       if (!parsed.id) {
-          console.error("User ID missing in session:", parsed);
-          setUser(parsed);
-          setOriginalUser(parsed);
-          return;
+        console.error("User ID missing in session:", parsed);
+        setUser(parsed);
+        setOriginalUser(parsed);
+        return;
       }
 
       // Fetch fresh data from API
       fetch(`http://localhost:5000/api/auth/profile/${parsed.id}`)
         .then(res => res.json())
         .then(data => {
-            if (data.error) {
-                console.error(data.error);
-                setUser(parsed);
-                setOriginalUser(parsed);
-            } else {
-                const userData = {
-                    ...data,
-                    password: data.password_hash 
-                };
-                setUser(userData);
-                setOriginalUser(userData);
-            }
-        })
-        .catch(err => {
-            console.error("Failed to load profile", err);
+          if (data.error) {
+            console.error(data.error);
             setUser(parsed);
             setOriginalUser(parsed);
+          } else {
+            const userData = {
+              ...data,
+              password: data.password_hash
+            };
+            setUser(userData);
+            setOriginalUser(userData);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to load profile", err);
+          setUser(parsed);
+          setOriginalUser(parsed);
         });
     }
   }, []);
@@ -176,7 +176,7 @@ export default function SettingsPage() {
 
   const applyTheme = (selectedTheme: 'light' | 'dark' | 'system') => {
     const root = document.documentElement;
-    
+
     if (selectedTheme === 'system') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (prefersDark) {
@@ -228,33 +228,33 @@ export default function SettingsPage() {
           <Card className="relative z-40">
             <CardBody className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label={t('fullName')} placeholder="John Doe" value={user.name || ''} onChange={(e) => setUser({...user, name: e.target.value})} />
-                <Input label={t('email')} type="email" placeholder="john@example.com" value={user.email || ''} onChange={(e) => setUser({...user, email: e.target.value})} />
+                <Input label={t('fullName')} placeholder="John Doe" value={user.name || ''} onChange={(e) => setUser({ ...user, name: e.target.value })} />
+                <Input label={t('email')} type="email" placeholder="john@example.com" value={user.email || ''} onChange={(e) => setUser({ ...user, email: e.target.value })} />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <Input 
-                   label={t('dateOfBirth')} 
-                   type="date" 
-                   value={user.dob ? new Date(user.dob).toISOString().split('T')[0] : ''} 
-                   onChange={(e) => setUser({...user, dob: e.target.value})} 
-                 />
-                 <Input 
-                   label="Phone Number" 
-                   type="tel" 
-                   placeholder="+1 (555) 000-0000" 
-                   value={user.phone || ''} 
-                   onChange={(e) => {
-                     // Only allow numbers and limit to 10 digits
-                     const numericValue = e.target.value.replace(/\D/g, '').slice(0, 10);
-                     setUser({...user, phone: numericValue});
-                   }} 
-                 />
+                <Input
+                  label={t('dateOfBirth')}
+                  type="date"
+                  value={user.dob ? new Date(user.dob).toISOString().split('T')[0] : ''}
+                  onChange={(e) => setUser({ ...user, dob: e.target.value })}
+                />
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={user.phone || ''}
+                  onChange={(e) => {
+                    // Only allow numbers and limit to 10 digits
+                    const numericValue = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setUser({ ...user, phone: numericValue });
+                  }}
+                />
               </div>
 
               <div className="border-t border-neutral-200 dark:border-neutral-800 my-4 pt-4">
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-4">{t('security')}</h3>
-                
+
                 {user.isOAuthUser ? (
                   // OAuth User - Show provider info
                   <div className="bg-accent/10 border border-accent/30 rounded-lg p-4">
@@ -285,60 +285,60 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                      {t('currentPassword')}
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={user.password || '********'}
-                        readOnly
-                        className="flex-1 px-4 py-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-50"
-                      />
-                      <Button
-                        variant="outline"
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? '🙈' : '👁️'}
-                      </Button>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        {t('currentPassword')}
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={user.password || '********'}
+                          readOnly
+                          className="flex-1 px-4 py-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-50"
+                        />
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? '🙈' : '👁️'}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                      {t('changePassword')}
-                    </label>
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="Enter new password" 
-                        type="password" 
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                      />
-                      <Button 
-                        type="button"
-                        variant="outline"
-                        onClick={handlePasswordChange}
-                        disabled={!newPassword.trim() || passwordStatus === 'saving'}
-                      >
-                        {passwordStatus === 'saving' ? t('saving') : t('update')}
-                      </Button>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        {t('changePassword')}
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter new password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handlePasswordChange}
+                          disabled={!newPassword.trim() || passwordStatus === 'saving'}
+                        >
+                          {passwordStatus === 'saving' ? t('saving') : t('update')}
+                        </Button>
+                      </div>
+                      {passwordStatus === 'success' && (
+                        <p className="text-sm text-success">✓ Password updated successfully!</p>
+                      )}
+                      {passwordStatus === 'error' && (
+                        <p className="text-sm text-danger">✗ Failed to update password</p>
+                      )}
                     </div>
-                    {passwordStatus === 'success' && (
-                      <p className="text-sm text-success">✓ Password updated successfully!</p>
-                    )}
-                    {passwordStatus === 'error' && (
-                      <p className="text-sm text-danger">✗ Failed to update password</p>
-                    )}
-                  </div>
                   </div>
                 )}
               </div>
             </CardBody>
             <CardFooter>
-              <Button 
+              <Button
                 onClick={() => {
                   const changes = getChangedFields();
                   if (changes.length === 0) {
@@ -370,7 +370,7 @@ export default function SettingsPage() {
           <Card className="relative z-20">
             <CardBody className="space-y-4">
               <div>
-                <Select 
+                <Select
                   label={t('theme')}
                   value={theme}
                   onChange={(val: any) => handleThemeChange({ target: { value: val } } as any)}
@@ -383,7 +383,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <Select 
+                <Select
                   label={t('language')}
                   value={language}
                   onChange={(val: any) => handleLanguageChange({ target: { value: val } } as any)}
@@ -412,9 +412,9 @@ export default function SettingsPage() {
 
           <Card className="border-danger/30 bg-danger/5 relative z-10">
             <CardBody className="space-y-4">
-              <Button 
-                variant="danger" 
-                className="w-full" 
+              <Button
+                variant="danger"
+                className="w-full"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 {t('deleteAccount')}
@@ -475,5 +475,13 @@ export default function SettingsPage() {
         isLoading={isDeleting}
       />
     </main>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SettingsContent />
+    </Suspense>
   );
 }

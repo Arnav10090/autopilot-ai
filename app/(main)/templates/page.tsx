@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Select } from '@/components/ui/Select';
 
 const TEMPLATES = [
+  // ... (keeping existing templates)
   // Web Category
   {
     id: 1,
@@ -262,10 +264,12 @@ const CATEGORIES = ['All', 'Web', 'Mobile', 'Backend', 'Data', 'AI'];
 
 export default function TemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [displayLimit, setDisplayLimit] = useState(6);
 
-  const filteredTemplates = selectedCategory === 'All'
+  const filteredTemplates = (selectedCategory === 'All'
     ? TEMPLATES
-    : TEMPLATES.filter(t => t.category === selectedCategory);
+    : TEMPLATES.filter(t => t.category === selectedCategory)
+  ).slice(0, displayLimit === -1 ? undefined : displayLimit);
 
   return (
     <main className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
@@ -279,20 +283,35 @@ export default function TemplatesPage() {
           </p>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                selectedCategory === cat
-                  ? 'bg-neutral-900 dark:bg-accent text-white shadow-md'
-                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === cat
+                    ? 'bg-neutral-900 dark:bg-accent text-white shadow-md'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-full md:w-48">
+            <Select
+              value={displayLimit}
+              onChange={(val) => setDisplayLimit(val)}
+              options={[
+                { label: 'Show 6', value: 6 },
+                { label: 'Show 12', value: 12 },
+                { label: 'Show 24', value: 24 },
+                { label: 'Show All', value: -1 }
+              ]}
+              containerClassName="w-full"
+            />
+          </div>
         </div>
       </div>
 

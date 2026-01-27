@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState('');
@@ -22,9 +22,9 @@ export default function OAuthCallbackPage() {
             google_auth_failed: 'Google authentication failed. Please try again.',
             github_auth_failed: 'GitHub authentication failed. Please try again.',
           };
-          
+
           setError(errorMessages[errorParam] || 'Authentication failed. Please try again.');
-          
+
           // Redirect to signin after showing error
           setTimeout(() => {
             router.push('/auth/signin');
@@ -71,9 +71,9 @@ export default function OAuthCallbackPage() {
         </div>
 
         <Card>
-          <CardHeader 
-            title={error ? 'Authentication Failed' : 'Signing you in...'} 
-            subtitle={error ? '' : 'Please wait while we complete the authentication'} 
+          <CardHeader
+            title={error ? 'Authentication Failed' : 'Signing you in...'}
+            subtitle={error ? '' : 'Please wait while we complete the authentication'}
           />
 
           <CardBody className="space-y-5">
@@ -93,5 +93,13 @@ export default function OAuthCallbackPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={<div>Processing login...</div>}>
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }
