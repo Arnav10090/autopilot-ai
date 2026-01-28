@@ -82,15 +82,6 @@ export function UserMenu() {
                   {t('settings')}
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/settings#api-keys"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center w-full px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-                >
-                  API Keys
-                </Link>
-              </li>
             </ul>
           </div>
           

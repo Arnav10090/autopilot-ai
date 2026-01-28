@@ -80,3 +80,9 @@ docker-compose.override.yml
 # =========================
 *.pem
 *.key
+
+# =========================
+# Deployment Credentials
+# =========================
+**/DEPLOYMENT_CHECKLIST.md
+**/deployment-credentials.*
