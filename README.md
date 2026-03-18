@@ -412,8 +412,7 @@ graph TB
     end
     
     subgraph "External Services"
-        L[Google Gemini AI]
-        M[Groq API]
+        L[Groq API - Llama 3.1]
         N[PostgreSQL]
         O[OAuth Providers]
     end
@@ -430,7 +429,7 @@ graph TB
     G --> K
     H --> L
     I --> L
-    J --> M
+    J --> L
     K --> L
     F --> O
     E --> N
@@ -470,8 +469,7 @@ graph TB
 | **Node.js** | 20+ | JavaScript runtime |
 | **Express** | 4.18.2 | Web framework |
 | **Passport.js** | 0.7.0 | Authentication |
-| **Google AI** | 0.24.1 | Gemini integration |
-| **Groq SDK** | 0.37.0 | Fast inference |
+| **Groq SDK** | 0.37.0 | AI inference (Llama 3.1) |
 | **PostgreSQL** | 8.16.3 | Database |
 
 **Key Features:**
@@ -480,12 +478,57 @@ graph TB
 - Session management
 - Multi-agent orchestration
 - Error handling & logging
+- Groq AI integration (14,400 free requests/day)
 
 </td>
 </tr>
 </table>
 
 ### Multi-Agent Architecture
+
+### Multi-Agent Architecture
+
+<details>
+<summary><b>🤖 Why Groq + Llama 3.1?</b></summary>
+
+**Architecture Decision:**
+
+AutoPilot AI originally supported both Google Gemini and Groq, but has migrated to use **Groq exclusively** for all AI agents. Here's why:
+
+**Performance Benefits:**
+- ⚡ **Blazing Fast**: Up to 750 tokens/second (10-20x faster than alternatives)
+- 🆓 **Generous Free Tier**: 14,400 requests/day (vs Gemini's 60/min limit)
+- 📊 **Large Context**: 128K token context window
+- 🔄 **High Throughput**: Perfect for multi-agent orchestration
+
+**Cost Efficiency:**
+- Free tier sufficient for most use cases
+- No credit card required for getting started
+- Predictable rate limits
+- No surprise billing
+
+**Model Quality:**
+- Llama 3.1 8B Instant: Fast, accurate for structured outputs
+- Llama 3.3 70B: Available for complex reasoning tasks
+- Mixtral 8x7B: Alternative for specialized use cases
+
+**Implementation:**
+```javascript
+// All agents use the same interface
+export async function callGemini(prompt) {
+  return callGroq(prompt);  // Redirects to Groq
+}
+```
+
+The `callGemini` function name is maintained for backward compatibility, but internally routes all requests to Groq. This allows seamless switching between providers if needed.
+
+**Fallback Strategy:**
+- Automatic retry with exponential backoff
+- Rate limit detection and handling
+- Graceful degradation to deterministic fallbacks
+- Schema validation ensures consistent outputs
+
+</details>
 
 <details>
 <summary><b>🔍 Requirements Agent</b></summary>
@@ -496,7 +539,7 @@ graph TB
 - Document assumptions and constraints
 - Categorize and prioritize requirements
 
-**AI Model:** Google Gemini Pro
+**AI Model:** Groq (Llama 3.1 8B Instant)
 **Output Format:** Structured JSON with categorized requirements
 
 </details>
@@ -511,7 +554,7 @@ graph TB
 - Explain reasoning for each choice
 - Suggest alternatives
 
-**AI Model:** Google Gemini Pro
+**AI Model:** Groq (Llama 3.1 8B Instant)
 **Output Format:** JSON with technology recommendations and confidence scores
 
 </details>
@@ -525,7 +568,7 @@ graph TB
 - Suggest mitigation strategies
 - Estimate impact and likelihood
 
-**AI Model:** Groq (Llama 3)
+**AI Model:** Groq (Llama 3.1 8B Instant)
 **Output Format:** JSON with risk items and mitigation plans
 
 </details>
@@ -540,67 +583,10 @@ graph TB
 - Estimate time and resources
 - Prioritize tasks
 
-**AI Model:** Google Gemini Pro
+**AI Model:** Groq (Llama 3.1 8B Instant)
 **Output Format:** JSON with module-based task breakdown
 
 </details>
-
-### State Management
-
-**Context API Architecture:**
-
-```typescript
-// Global State Providers
-<ThemeProvider>          // Light/Dark/System theme
-  <LanguageProvider>     // i18n (EN, ES, FR, DE)
-    <SearchProvider>     // Global search functionality
-      <SidebarProvider>  // Navigation state
-        <ChatProvider>   // AI assistant state
-          {children}
-        </ChatProvider>
-      </SidebarProvider>
-    </SearchProvider>
-  </LanguageProvider>
-</ThemeProvider>
-```
-
-### Database Schema
-
-```sql
--- Users Table
-CREATE TABLE users (
-  id UUID PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255),
-  avatar_url TEXT,
-  provider VARCHAR(50),
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Projects Table
-CREATE TABLE projects (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  requirements JSONB,
-  tech_stack JSONB,
-  risks JSONB,
-  tasks JSONB,
-  status VARCHAR(50),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Analytics Table
-CREATE TABLE analytics (
-  id UUID PRIMARY KEY,
-  project_id UUID REFERENCES projects(id),
-  metric_name VARCHAR(100),
-  metric_value NUMERIC,
-  recorded_at TIMESTAMP DEFAULT NOW()
-);
-```
 
 ---
 
@@ -706,13 +692,20 @@ NEXT_PUBLIC_ENABLE_CHAT=true
 PORT=5000
 NODE_ENV=development
 
-# Google Gemini AI (Required)
-GOOGLE_API_KEY=your_gemini_api_key_here
-# Get your key: https://makersuite.google.com/app/apikey
-
-# Groq API (Optional - for Risk Assessment)
+# Groq AI (Primary - Free tier: 14,400 requests/day)
 GROQ_API_KEY=your_groq_api_key_here
 # Get your key: https://console.groq.com/keys
+# Model: llama-3.1-8b-instant (default, fastest)
+# Alternative models: llama-3.3-70b-versatile, mixtral-8x7b-32768
+
+# Google Gemini AI (Optional - Legacy support)
+GOOGLE_API_KEY=your_gemini_api_key_here
+# Get your key: https://makersuite.google.com/app/apikey
+# Note: Current implementation uses Groq by default
+
+# LLM Provider Selection (Optional)
+# LLM_PROVIDER=groq  # Options: groq, gemini
+# GROQ_MODEL=llama-3.1-8b-instant  # Override default model
 
 # Database Configuration (Optional)
 DATABASE_URL=postgresql://user:password@localhost:5432/autopilot_ai
@@ -742,20 +735,28 @@ CORS_ORIGIN=http://localhost:3000
 <details>
 <summary>🔑 How to get API keys</summary>
 
-**Google Gemini API Key:**
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Sign in with your Google account
-3. Click "Create API Key"
-4. Copy the key to your `.env` file
-
-**Groq API Key:**
+**Groq API Key (Primary - Required):**
 1. Visit [Groq Console](https://console.groq.com/)
 2. Sign up for a free account
 3. Navigate to API Keys section
 4. Generate a new key
 5. Copy to your `.env` file
 
-**OAuth Credentials:**
+**Free Tier Benefits:**
+- 14,400 requests per day
+- 128K context window
+- Extremely fast inference (up to 750 tokens/sec)
+- Multiple models available (Llama 3.1, Llama 3.3, Mixtral)
+
+**Google Gemini API Key (Optional - Legacy):**
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click "Create API Key"
+4. Copy the key to your `.env` file
+
+**Note:** The current implementation uses Groq by default for all AI agents. Gemini support is maintained for backward compatibility but not actively used.
+
+**OAuth Credentials (Optional - for Authentication):**
 - **Google:** [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials
 - **GitHub:** [GitHub Settings](https://github.com/settings/developers) → OAuth Apps → New OAuth App
 
@@ -1044,635 +1045,6 @@ Compliance: GDPR, SOC 2
 
 ---
 
-### Viewing & Interacting with Your Project Plan
-
-#### Requirements Section
-
-```typescript
-// Copy all requirements
-<Button onClick={copyAllRequirements}>
-  📋 Copy All Requirements
-</Button>
-
-// Copy individual requirement
-<Button onClick={() => copyRequirement(req.id)}>
-  📋 Copy
-</Button>
-
-// Filter requirements
-<Select onChange={filterByCategory}>
-  <option>All</option>
-  <option>Functional</option>
-  <option>Non-Functional</option>
-  <option>Assumptions</option>
-</Select>
-```
-
-**Actions:**
-- 📋 Copy to clipboard
-- 🔍 Search within requirements
-- 🏷️ Filter by category
-- ✏️ Edit via AI chat
-- 📤 Export to various formats
-
----
-
-#### Tech Stack Section
-
-**View Details:**
-- Hover over technology for quick info
-- Click for detailed reasoning
-- See confidence score (0-100%)
-- View alternatives
-
-**Interactive Features:**
-```typescript
-// Technology card interaction
-<TechTile
-  name="Next.js"
-  category="Frontend Framework"
-  confidence={95}
-  reasoning="Excellent for SEO, SSR support..."
-  alternatives={["Remix", "Gatsby"]}
-  onCopy={() => copyTech(tech)}
-  onCompare={() => compareTechs([tech, ...alternatives])}
-/>
-```
-
----
-
-#### Risk Assessment Section
-
-**Risk Severity Levels:**
-
-| Level | Color | Action Required |
-|-------|-------|-----------------|
-| 🔴 Critical | Red | Immediate attention |
-| 🟠 High | Orange | Plan mitigation ASAP |
-| 🟡 Medium | Yellow | Monitor closely |
-| 🟢 Low | Green | Acknowledge |
-
-**Mitigation Strategies:**
-```typescript
-// Each risk includes actionable steps
-{
-  risk: "Database scalability concerns",
-  severity: "High",
-  mitigation: [
-    "Implement database sharding strategy",
-    "Set up read replicas",
-    "Use caching layer (Redis)",
-    "Monitor query performance"
-  ],
-  timeline: "Before reaching 10K users"
-}
-```
-
----
-
-#### Execution Plan Section
-
-**Task Management:**
-
-```typescript
-// Module structure
-{
-  module: "User Authentication",
-  priority: "P0",
-  estimatedTime: "2 weeks",
-  tasks: [
-    {
-      id: "auth-1",
-      title: "Implement OAuth 2.0",
-      description: "Set up Google & GitHub OAuth",
-      dependencies: [],
-      assignee: null,
-      status: "pending"
-    },
-    // ... more tasks
-  ]
-}
-```
-
-**Drag & Drop Reordering:**
-- Click and hold task
-- Drag to new position
-- Release to drop
-- Keyboard: `Space` to grab, `Arrow keys` to move, `Space` to drop
-
----
-
-### Using the AI Chat Assistant
-
-<details>
-<summary><b>💬 Opening the Chat</b></summary>
-
-**Methods:**
-- Click floating chat icon (bottom-right)
-- Keyboard shortcut: `Ctrl/Cmd + K`
-- From any section: "Ask AI" button
-
-</details>
-
-<details>
-<summary><b>🤔 Example Questions</b></summary>
-
-**About Requirements:**
-- "Why is real-time sync a requirement?"
-- "Can you add user analytics to requirements?"
-- "What does 'GDPR compliance' entail?"
-
-**About Tech Stack:**
-- "Why Next.js over Remix?"
-- "What are the alternatives to PostgreSQL?"
-- "Can we use MongoDB instead?"
-
-**About Risks:**
-- "How critical is the scalability risk?"
-- "What's the best way to mitigate security risks?"
-- "Can you elaborate on timeline concerns?"
-
-**About Tasks:**
-- "Can you break down the authentication module further?"
-- "What's the dependency chain for deployment?"
-- "How long will testing take?"
-
-</details>
-
-<details>
-<summary><b>✏️ Modifying Your Plan</b></summary>
-
-**Request Changes:**
-```
-User: "Add support for social media login"
-AI: "I'll update the requirements and tech stack to include 
-     social media authentication. This will add OAuth providers 
-     for Facebook, Twitter, and LinkedIn..."
-
-User: "Switch from PostgreSQL to MongoDB"
-AI: "I'll update the tech stack recommendation. Note that this 
-     may affect some requirements around ACID compliance..."
-```
-
-**AI Will:**
-- Update relevant sections
-- Explain implications
-- Adjust related items
-- Recalculate confidence scores
-
-</details>
-
----
-
-### Using Project Templates
-
-**Available Templates:**
-
-| Template | Best For | Tech Stack | Complexity |
-|----------|----------|------------|------------|
-| 🛒 **E-commerce** | Online stores | Next.js, Stripe, PostgreSQL | Medium |
-| 📊 **SaaS Dashboard** | B2B products | React, Node.js, MongoDB | Medium |
-| 📱 **Mobile App** | iOS/Android | React Native, Firebase | Low |
-| 🤖 **AI/ML App** | ML products | Python, TensorFlow, FastAPI | High |
-| 💬 **Chat App** | Real-time chat | Socket.io, Redis, React | Medium |
-| 🎨 **Portfolio** | Personal sites | Next.js, Tailwind, MDX | Low |
-
-**Using a Template:**
-
-1. Navigate to `/templates`
-2. Browse available templates
-3. Click **"Use Template"**
-4. Customize the pre-filled form
-5. Generate your customized plan
-
-**Benefits:**
-- ⚡ Faster project setup
-- ✅ Best practices included
-- 🎯 Industry-standard tech stacks
-- 📚 Pre-defined requirements
-
----
-
-### Exporting Your Project Plan
-
-<details>
-<summary><b>📤 Export Options</b></summary>
-
-**Step 1: Click Export Button**
-- Located in project detail header
-- Keyboard shortcut: `Ctrl/Cmd + E`
-
-**Step 2: Select Sections**
-```typescript
-// Customizable export sections
-{
-  includeRequirements: true,
-  includeTechStack: true,
-  includeRisks: true,
-  includeExecutionPlan: true,
-  includeMetrics: false,
-  includeNotes: true,
-  includeAttachments: false
-}
-```
-
-**Step 3: Choose Format**
-- 📄 PDF - Best for presentations
-- 📝 DOCX - Best for editing
-- 📊 CSV - Best for data analysis
-- 🔧 JSON - Best for API integration
-- 📋 Markdown - Best for documentation
-
-**Step 4: Download**
-- File generates instantly
-- Auto-downloads to your device
-- Filename: `{project-name}-{date}.{format}`
-
-</details>
-
-<details>
-<summary><b>📄 PDF Export Features</b></summary>
-
-**Includes:**
-- Professional cover page
-- Table of contents
-- Syntax-highlighted code blocks
-- Embedded images and diagrams
-- Page numbers and headers
-- Clickable links
-
-**Customization:**
-- Page size (A4, Letter, Legal)
-- Orientation (Portrait, Landscape)
-- Margins
-- Font size
-- Color scheme
-
-</details>
-
-<details>
-<summary><b>📝 DOCX Export Features</b></summary>
-
-**Includes:**
-- Styled headings (H1-H6)
-- Bullet and numbered lists
-- Tables with borders
-- Inline code formatting
-- Hyperlinks
-- Comments and notes
-
-**Editable:**
-- All text content
-- Formatting and styles
-- Tables and lists
-- Images and diagrams
-
-</details>
-
----
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl/Cmd + N` | New project |
-| `Ctrl/Cmd + K` | Open AI chat |
-| `Ctrl/Cmd + E` | Export project |
-| `Ctrl/Cmd + S` | Save changes |
-| `/` | Focus search |
-| `Esc` | Close modals |
-| `Tab` | Navigate forward |
-| `Shift + Tab` | Navigate backward |
-| `Space` | Grab/drop (drag & drop) |
-| `Arrow Keys` | Move items |
-| `Enter` | Confirm action |
-
----
-
-<div align="center">
-
-### ⭐ If you find this project useful, please consider giving it a star!
-
-**Made with ❤️ by [Arnav10090](https://github.com/Arnav10090)**
-
-</div>
-
-## 🔌 API Reference
-
-### Base URL
-
-```
-Development: http://localhost:5000
-Production: https://api.autopilot-ai.com
-```
-
-### Authentication
-
-```typescript
-// OAuth 2.0 Flow
-GET /auth/google
-GET /auth/github
-GET /auth/callback
-
-// Session Management
-GET /auth/user
-POST /auth/logout
-```
-
-### Projects API
-
-<details>
-<summary><b>Create Project</b></summary>
-
-```http
-POST /api/projects
-Content-Type: application/json
-Authorization: Bearer {token}
-
-{
-  "name": "E-commerce Platform",
-  "description": "Online store with payment processing",
-  "teamSize": 5,
-  "deadline": "2024-12-31",
-  "constraints": {
-    "mustUse": ["React", "PostgreSQL"],
-    "avoid": ["MongoDB"],
-    "compliance": ["GDPR", "PCI-DSS"]
-  },
-  "requirements": {
-    "performance": "high",
-    "scalability": "medium",
-    "security": "critical"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "id": "uuid-here",
-  "status": "processing",
-  "estimatedTime": 60,
-  "message": "AI agents are analyzing your project..."
-}
-```
-
-</details>
-
-<details>
-<summary><b>Get Project</b></summary>
-
-```http
-GET /api/projects/:id
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "id": "uuid-here",
-  "name": "E-commerce Platform",
-  "status": "completed",
-  "requirements": {
-    "functional": [...],
-    "nonFunctional": [...],
-    "assumptions": [...]
-  },
-  "techStack": {
-    "frontend": {...},
-    "backend": {...},
-    "database": {...}
-  },
-  "risks": [...],
-  "executionPlan": {
-    "modules": [...]
-  },
-  "metrics": {
-    "confidence": 92,
-    "processingTime": 58
-  },
-  "createdAt": "2024-01-15T10:30:00Z",
-  "updatedAt": "2024-01-15T10:31:00Z"
-}
-```
-
-</details>
-
-<details>
-<summary><b>List Projects</b></summary>
-
-```http
-GET /api/projects?page=1&limit=10&sort=createdAt&order=desc
-Authorization: Bearer {token}
-```
-
-**Query Parameters:**
-- `page` - Page number (default: 1)
-- `limit` - Items per page (default: 10, max: 100)
-- `sort` - Sort field (createdAt, name, status)
-- `order` - Sort order (asc, desc)
-- `status` - Filter by status (processing, completed, failed)
-
-**Response:**
-```json
-{
-  "projects": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 45,
-    "pages": 5
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><b>Update Project</b></summary>
-
-```http
-PATCH /api/projects/:id
-Content-Type: application/json
-Authorization: Bearer {token}
-
-{
-  "name": "Updated Project Name",
-  "notes": "Additional project notes"
-}
-```
-
-</details>
-
-<details>
-<summary><b>Delete Project</b></summary>
-
-```http
-DELETE /api/projects/:id
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "message": "Project deleted successfully",
-  "id": "uuid-here"
-}
-```
-
-</details>
-
-### AI Chat API
-
-<details>
-<summary><b>Send Message</b></summary>
-
-```http
-POST /api/chat
-Content-Type: application/json
-Authorization: Bearer {token}
-
-{
-  "projectId": "uuid-here",
-  "message": "Can you add user analytics to requirements?",
-  "context": {
-    "section": "requirements",
-    "itemId": "req-123"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "response": "I'll add user analytics tracking to the requirements...",
-  "updates": {
-    "requirements": {
-      "added": ["User analytics and tracking dashboard"],
-      "modified": []
-    }
-  },
-  "confidence": 88
-}
-```
-
-</details>
-
-### Export API
-
-<details>
-<summary><b>Export Project</b></summary>
-
-```http
-POST /api/projects/:id/export
-Content-Type: application/json
-Authorization: Bearer {token}
-
-{
-  "format": "pdf",
-  "sections": {
-    "requirements": true,
-    "techStack": true,
-    "risks": true,
-    "executionPlan": true,
-    "metrics": false
-  },
-  "options": {
-    "pageSize": "A4",
-    "orientation": "portrait"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "downloadUrl": "https://api.autopilot-ai.com/downloads/project-123.pdf",
-  "expiresAt": "2024-01-15T11:30:00Z",
-  "fileSize": 2458624
-}
-```
-
-</details>
-
-### Analytics API
-
-<details>
-<summary><b>Get Analytics</b></summary>
-
-```http
-GET /api/analytics?range=30d&metrics=all
-Authorization: Bearer {token}
-```
-
-**Query Parameters:**
-- `range` - Time range (24h, 7d, 30d, 90d, all)
-- `metrics` - Metrics to include (all, projects, confidence, performance)
-
-**Response:**
-```json
-{
-  "period": {
-    "start": "2023-12-15T00:00:00Z",
-    "end": "2024-01-15T00:00:00Z"
-  },
-  "metrics": {
-    "projectsAnalyzed": 127,
-    "averageConfidence": 91.5,
-    "averageProcessingTime": 52.3,
-    "successRate": 98.4
-  },
-  "trends": {
-    "projectsGrowth": 15.2,
-    "confidenceChange": 2.1
-  }
-}
-```
-
-</details>
-
-### Error Responses
-
-```typescript
-// Standard error format
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Project name is required",
-    "details": {
-      "field": "name",
-      "constraint": "required"
-    }
-  },
-  "timestamp": "2024-01-15T10:30:00Z",
-  "requestId": "req-uuid-here"
-}
-```
-
-**Error Codes:**
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (missing/invalid token)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found (resource doesn't exist)
-- `429` - Too Many Requests (rate limit exceeded)
-- `500` - Internal Server Error
-- `503` - Service Unavailable (AI service down)
-
-### Rate Limiting
-
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1642248600
-```
-
-**Limits:**
-- Free tier: 10 requests/minute, 100 requests/hour
-- Pro tier: 60 requests/minute, 1000 requests/hour
-- Enterprise: Custom limits
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions from the community! Here's how you can help make AutoPilot AI better.
@@ -1873,16 +1245,6 @@ SOFTWARE.
 
 ---
 
-## 🙏 Acknowledgments
-
-Special thanks to:
-
-- **Google Gemini AI** - For powering our intelligent agents
-- **Groq** - For fast inference capabilities
-- **Vercel** - For Next.js and deployment platform
-- **Open Source Community** - For amazing tools and libraries
-- **Contributors** - Everyone who has contributed to this project
-
 ### Built With
 
 <table>
@@ -1917,127 +1279,6 @@ Special thanks to:
 </td>
 </tr>
 </table>
-
----
-
-## 📊 Project Stats
-
-<div align="center">
-
-![GitHub stars](https://img.shields.io/github/stars/Arnav10090/autopilot-ai?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Arnav10090/autopilot-ai?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/Arnav10090/autopilot-ai?style=social)
-
-![GitHub issues](https://img.shields.io/github/issues/Arnav10090/autopilot-ai)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/Arnav10090/autopilot-ai)
-![GitHub last commit](https://img.shields.io/github/last-commit/Arnav10090/autopilot-ai)
-![GitHub repo size](https://img.shields.io/github/repo-size/Arnav10090/autopilot-ai)
-
-</div>
-
----
-
-## 🗺️ Roadmap
-
-### Q1 2024
-- [x] Multi-agent AI architecture
-- [x] Requirements analysis
-- [x] Tech stack recommendations
-- [x] Risk assessment
-- [x] Execution planning
-- [x] Multi-format export
-
-### Q2 2024
-- [ ] Real-time collaboration
-- [ ] Team workspaces
-- [ ] Version control for plans
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app (iOS/Android)
-- [ ] API rate limiting & quotas
-
-### Q3 2024
-- [ ] Custom AI agent training
-- [ ] Integration with project management tools (Jira, Asana)
-- [ ] Code generation from plans
-- [ ] Automated testing recommendations
-- [ ] Cost estimation improvements
-- [ ] Multi-language support expansion
-
-### Q4 2024
-- [ ] Enterprise features (SSO, RBAC)
-- [ ] On-premise deployment option
-- [ ] Advanced security features
-- [ ] Custom branding for teams
-- [ ] Webhook integrations
-- [ ] GraphQL API
-
----
-
-## 💬 Community & Support
-
-<div align="center">
-
-### Join Our Community
-
-[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/autopilot-ai)
-[![Twitter](https://img.shields.io/badge/Twitter-Follow-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/autopilotai)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/company/autopilot-ai)
-
-### Get Support
-
-- 📚 [Documentation](https://docs.autopilot-ai.com)
-- 💬 [Community Forum](https://github.com/Arnav10090/autopilot-ai/discussions)
-- 🐛 [Report Issues](https://github.com/Arnav10090/autopilot-ai/issues)
-- 📧 [Email Support](mailto:support@autopilot-ai.com)
-
-</div>
-
----
-
-## 📸 Screenshots
-
-<details>
-<summary><b>🏠 Homepage</b></summary>
-
-![Homepage](https://via.placeholder.com/800x450/1a1a2e/ffffff?text=AutoPilot+AI+Homepage)
-
-</details>
-
-<details>
-<summary><b>📝 Project Creation Wizard</b></summary>
-
-![Project Creation](https://via.placeholder.com/800x450/16213e/ffffff?text=Project+Creation+Wizard)
-
-</details>
-
-<details>
-<summary><b>📊 Project Dashboard</b></summary>
-
-![Project Dashboard](https://via.placeholder.com/800x450/0f3460/ffffff?text=Project+Dashboard)
-
-</details>
-
-<details>
-<summary><b>🛠️ Tech Stack Recommendations</b></summary>
-
-![Tech Stack](https://via.placeholder.com/800x450/533483/ffffff?text=Tech+Stack+Recommendations)
-
-</details>
-
-<details>
-<summary><b>⚠️ Risk Assessment</b></summary>
-
-![Risk Assessment](https://via.placeholder.com/800x450/e94560/ffffff?text=Risk+Assessment)
-
-</details>
-
----
-
-<div align="center">
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Arnav10090/autopilot-ai&type=Date)](https://star-history.com/#Arnav10090/autopilot-ai&Date)
 
 ---
 
