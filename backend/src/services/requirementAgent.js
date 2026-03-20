@@ -2,6 +2,7 @@ import { callGemini } from "../utils/geminiClient.js";
 import { executeWithGuards } from "../utils/executeWithGuards.js";
 import { requirementsSchema } from "../utils/schema.js";
 import { requirementsFallback } from "../utils/fallbacks.js";
+import { extractJSON } from "../utils/extractJSON.js";
 
 export async function runRequirementAgent(input) {
   return executeWithGuards({
@@ -48,7 +49,7 @@ Attempt: ${attempt} of ${maxAttempts}
 
         let parsed;
         try {
-          parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+          parsed = extractJSON(raw);
         } catch (err) {
           // if last attempt, rethrow so executeWithGuards will fallback
           if (attempt === maxAttempts) throw err;

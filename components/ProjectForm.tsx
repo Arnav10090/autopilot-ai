@@ -461,9 +461,9 @@ export default function ProjectForm() {
 
         {/* Step: Team & Timeline */}
         {currentStep === 'team' && (
-          <Card className="animate-fade-in">
+          <Card className="animate-fade-in overflow-visible relative z-10">
             <CardHeader title="Team & Timeline" subtitle="Define your team size and project deadline" />
-            <CardBody className="space-y-4">
+            <CardBody className="space-y-4 overflow-visible">
               <Input
                 label="Team Size"
                 type="number"

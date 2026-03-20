@@ -38,7 +38,7 @@ async function callGroq(prompt, retryCount = 0) {
       model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 

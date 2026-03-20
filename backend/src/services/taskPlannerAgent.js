@@ -2,6 +2,7 @@ import { callGemini } from "../utils/geminiClient.js";
 import { executeWithGuards } from "../utils/executeWithGuards.js";
 import { taskPlanSchema } from "../utils/schema.js";
 import { taskPlanFallback } from "../utils/fallbacks.js";
+import { extractJSON } from "../utils/extractJSON.js";
 
 export async function runTaskPlannerAgent(requirements, techStack, deadline) {
   return executeWithGuards({
@@ -84,7 +85,7 @@ Attempt: ${attempt} of ${maxAttempts}
 
         let parsed;
         try {
-          parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+          parsed = extractJSON(raw);
         } catch (err) {
           if (attempt === maxAttempts) throw err;
           continue;
@@ -97,9 +98,9 @@ Attempt: ${attempt} of ${maxAttempts}
           (sum, m) => sum + (m.tasks?.length || 0),
           0
         );
-        const modulesOk = modules.length >= 5;
+        const modulesOk = modules.length >= 3;
         const tasksOk =
-          totalTasks >= 35 && modules.every((m) => m.tasks?.length >= 5);
+          totalTasks >= 9 && modules.every((m) => m.tasks?.length >= 3);
         const tasksHaveDetails = modules.every((m) =>
           m.tasks.every(
             (t) =>

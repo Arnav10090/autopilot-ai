@@ -2,6 +2,7 @@ import { callGemini } from "../utils/geminiClient.js";
 import { executeWithGuards } from "../utils/executeWithGuards.js";
 import { techStackSchema } from "../utils/schema.js";
 import { techStackFallback } from "../utils/fallbacks.js";
+import { extractJSON } from "../utils/extractJSON.js";
 
 export async function runTechStackAgent(requirements, input) {
   return executeWithGuards({
@@ -35,7 +36,7 @@ Output JSON:
 `;
 
       const raw = await callGemini(prompt);
-      return JSON.parse(raw.replace(/```json|```/g, "").trim());
+      return extractJSON(raw);
     }
   });
 }

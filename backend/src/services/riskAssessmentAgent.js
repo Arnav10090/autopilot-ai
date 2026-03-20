@@ -2,6 +2,7 @@ import { callGemini } from "../utils/geminiClient.js";
 import { executeWithGuards } from "../utils/executeWithGuards.js";
 import { riskSchema } from "../utils/schema.js";
 import { riskFallback } from "../utils/fallbacks.js";
+import { extractJSON } from "../utils/extractJSON.js";
 
 export async function runRiskAssessmentAgent(
   requirements,
@@ -53,7 +54,7 @@ QUALITY BAR:
 `;
 
       const raw = await callGemini(prompt);
-      return JSON.parse(raw.replace(/```json|```/g, "").trim());
+      return extractJSON(raw);
     }
   });
 }
