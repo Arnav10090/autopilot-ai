@@ -25,8 +25,8 @@ async function callGroq(prompt, retryCount = 0) {
   }
 
   const MAX_RETRIES = 3;
-  // Using Llama 3.1 8B - much faster and higher rate limits
-  const model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+  // Using Llama 3.3 70B - better quality and higher rate limits
+  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",

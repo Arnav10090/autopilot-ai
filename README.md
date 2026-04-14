@@ -112,6 +112,208 @@ Every recommendation comes with:
 
 ---
 
+## 🚀 Quick Start
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+| Requirement | Version | Download |
+|-------------|---------|----------|
+| **Node.js** | 20.x or higher | [nodejs.org](https://nodejs.org/) |
+| **npm** | 9.x or higher | Included with Node.js |
+| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
+| **PostgreSQL** | 14+ (optional) | [postgresql.org](https://www.postgresql.org/) |
+
+### Installation Steps
+
+<details open>
+<summary><b>1️⃣ Clone the Repository</b></summary>
+
+```bash
+# Clone via HTTPS
+git clone https://github.com/Arnav10090/autopilot-ai.git
+
+# Or clone via SSH
+git clone git@github.com:Arnav10090/autopilot-ai.git
+
+# Navigate to project directory
+cd autopilot-ai
+```
+
+</details>
+
+<details open>
+<summary><b>2️⃣ Install Frontend Dependencies</b></summary>
+
+```bash
+# Install frontend packages
+npm install
+
+# Verify installation
+npm list --depth=0
+```
+
+**Expected output:**
+```
+frontend@0.1.0
+├── next@16.1.1
+├── react@19.2.3
+├── typescript@5.x
+└── tailwindcss@4.x
+```
+
+</details>
+
+<details open>
+<summary><b>3️⃣ Install Backend Dependencies</b></summary>
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install backend packages
+npm install
+
+# Return to root
+cd ..
+```
+
+**Expected output:**
+```
+backend@1.0.0
+├── express@4.18.2
+├── @google/generative-ai@0.24.1
+├── passport@0.7.0
+└── pg@8.16.3
+```
+
+</details>
+
+<details open>
+<summary><b>4️⃣ Configure Environment Variables</b></summary>
+
+**Frontend Configuration** (`.env.local` in root):
+
+```env
+# Application URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+# Feature Flags (optional)
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+NEXT_PUBLIC_ENABLE_CHAT=true
+```
+
+**Backend Configuration** (`backend/.env`):
+
+```env
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Groq AI (Primary - Free tier: 14,400 requests/day)
+GROQ_API_KEY=your_groq_api_key_here
+# Get your key: https://console.groq.com/keys
+# Model: llama-3.1-8b-instant (default, fastest)
+# Alternative models: llama-3.3-70b-versatile, mixtral-8x7b-32768
+
+# Google Gemini AI (Optional - Legacy support)
+GOOGLE_API_KEY=your_gemini_api_key_here
+# Get your key: https://makersuite.google.com/app/apikey
+# Note: Current implementation uses Groq by default
+
+# LLM Provider Selection (Optional)
+# LLM_PROVIDER=groq  # Options: groq, gemini
+# GROQ_MODEL=llama-3.1-8b-instant  # Override default model
+
+# Database Configuration (Optional)
+DATABASE_URL=postgresql://user:password@localhost:5432/autopilot_ai
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=autopilot_ai
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+
+# OAuth Configuration (Optional - for Authentication)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
+
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:5000/auth/github/callback
+
+# Session Secret (Required if using OAuth)
+SESSION_SECRET=your_random_session_secret_here
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:3000
+```
+
+<details open>
+<summary><b>6️⃣ Start Development Servers</b></summary>
+
+**Option A: Run Both Servers Simultaneously**
+
+```bash
+# Terminal 1 - Frontend
+npm run dev
+
+# Terminal 2 - Backend
+cd backend
+npm start
+```
+
+**Option B: Use Process Manager (Recommended)**
+
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Start both servers
+pm2 start npm --name "frontend" -- run dev
+pm2 start npm --name "backend" --cwd backend -- start
+
+# View logs
+pm2 logs
+
+# Stop servers
+pm2 stop all
+```
+
+</details>
+
+<details open>
+<summary><b>7️⃣ Access the Application</b></summary>
+
+Open your browser and navigate to:
+
+- **Frontend:** [http://localhost:3000](http://localhost:3000)
+- **Backend API:** [http://localhost:5000](http://localhost:5000)
+- **API Health Check:** [http://localhost:5000/health](http://localhost:5000/health)
+
+**Expected Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "services": {
+    "database": "connected",
+    "ai": "ready"
+  }
+}
+```
+
+</details>
+
+### 🎉 Success!
+
+You should now see the AutoPilot AI homepage. Try creating your first project plan!
+
 ## ✨ Key Features
 
 ### 🔍 **Intelligent Requirements Analysis**
@@ -590,148 +792,6 @@ The `callGemini` function name is maintained for backward compatibility, but int
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-| Requirement | Version | Download |
-|-------------|---------|----------|
-| **Node.js** | 20.x or higher | [nodejs.org](https://nodejs.org/) |
-| **npm** | 9.x or higher | Included with Node.js |
-| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
-| **PostgreSQL** | 14+ (optional) | [postgresql.org](https://www.postgresql.org/) |
-
-### Installation Steps
-
-<details open>
-<summary><b>1️⃣ Clone the Repository</b></summary>
-
-```bash
-# Clone via HTTPS
-git clone https://github.com/Arnav10090/autopilot-ai.git
-
-# Or clone via SSH
-git clone git@github.com:Arnav10090/autopilot-ai.git
-
-# Navigate to project directory
-cd autopilot-ai
-```
-
-</details>
-
-<details open>
-<summary><b>2️⃣ Install Frontend Dependencies</b></summary>
-
-```bash
-# Install frontend packages
-npm install
-
-# Verify installation
-npm list --depth=0
-```
-
-**Expected output:**
-```
-frontend@0.1.0
-├── next@16.1.1
-├── react@19.2.3
-├── typescript@5.x
-└── tailwindcss@4.x
-```
-
-</details>
-
-<details open>
-<summary><b>3️⃣ Install Backend Dependencies</b></summary>
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Install backend packages
-npm install
-
-# Return to root
-cd ..
-```
-
-**Expected output:**
-```
-backend@1.0.0
-├── express@4.18.2
-├── @google/generative-ai@0.24.1
-├── passport@0.7.0
-└── pg@8.16.3
-```
-
-</details>
-
-<details open>
-<summary><b>4️⃣ Configure Environment Variables</b></summary>
-
-**Frontend Configuration** (`.env.local` in root):
-
-```env
-# Application URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:5000
-
-# Feature Flags (optional)
-NEXT_PUBLIC_ENABLE_ANALYTICS=true
-NEXT_PUBLIC_ENABLE_CHAT=true
-```
-
-**Backend Configuration** (`backend/.env`):
-
-```env
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# Groq AI (Primary - Free tier: 14,400 requests/day)
-GROQ_API_KEY=your_groq_api_key_here
-# Get your key: https://console.groq.com/keys
-# Model: llama-3.1-8b-instant (default, fastest)
-# Alternative models: llama-3.3-70b-versatile, mixtral-8x7b-32768
-
-# Google Gemini AI (Optional - Legacy support)
-GOOGLE_API_KEY=your_gemini_api_key_here
-# Get your key: https://makersuite.google.com/app/apikey
-# Note: Current implementation uses Groq by default
-
-# LLM Provider Selection (Optional)
-# LLM_PROVIDER=groq  # Options: groq, gemini
-# GROQ_MODEL=llama-3.1-8b-instant  # Override default model
-
-# Database Configuration (Optional)
-DATABASE_URL=postgresql://user:password@localhost:5432/autopilot_ai
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=autopilot_ai
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-
-# OAuth Configuration (Optional - for Authentication)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
-
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:5000/auth/github/callback
-
-# Session Secret (Required if using OAuth)
-SESSION_SECRET=your_random_session_secret_here
-# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# CORS Configuration
-CORS_ORIGIN=http://localhost:3000
-```
-
 <details>
 <summary>🔑 How to get API keys</summary>
 
@@ -787,66 +847,6 @@ psql autopilot_ai -c "\dt"
 - `analytics`
 
 </details>
-
-<details open>
-<summary><b>6️⃣ Start Development Servers</b></summary>
-
-**Option A: Run Both Servers Simultaneously**
-
-```bash
-# Terminal 1 - Frontend
-npm run dev
-
-# Terminal 2 - Backend
-cd backend
-npm start
-```
-
-**Option B: Use Process Manager (Recommended)**
-
-```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start both servers
-pm2 start npm --name "frontend" -- run dev
-pm2 start npm --name "backend" --cwd backend -- start
-
-# View logs
-pm2 logs
-
-# Stop servers
-pm2 stop all
-```
-
-</details>
-
-<details open>
-<summary><b>7️⃣ Access the Application</b></summary>
-
-Open your browser and navigate to:
-
-- **Frontend:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:5000](http://localhost:5000)
-- **API Health Check:** [http://localhost:5000/health](http://localhost:5000/health)
-
-**Expected Response:**
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "services": {
-    "database": "connected",
-    "ai": "ready"
-  }
-}
-```
-
-</details>
-
-### 🎉 Success!
-
-You should now see the AutoPilot AI homepage. Try creating your first project plan!
 
 ### 🐛 Troubleshooting
 

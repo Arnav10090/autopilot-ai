@@ -101,7 +101,7 @@ export default function AgentProgress({ isDataReady = false, onAnimationComplete
             return (
               <div
                 key={agent.name}
-                className={`relative p-4 rounded-2xl border-2 transition-all duration-500 min-w-[120px] ${
+                className={`relative p-4 rounded-2xl border-2 transition-all duration-500 min-w-[180px] ${
                   isActive
                     ? 'border-white bg-white/10 scale-105 shadow-2xl shadow-white/10'
                     : isCompleted
